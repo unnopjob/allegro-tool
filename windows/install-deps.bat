@@ -101,8 +101,19 @@ if %NODE_INSTALLED%==0 (
     echo [INFO] Downloading Node.js... ^(about 30MB^)
     call :Download "%NODE_URL%" "%NODE_MSI%"
     if errorlevel 1 (
-        echo [FAIL] All download methods failed.
-        echo        Please download manually: https://nodejs.org
+        echo.
+        echo [FAIL] Cannot download automatically.
+        echo.
+        echo Please download manually:
+        echo   https://nodejs.org  (click "Download Node.js LTS")
+        echo.
+        echo Steps:
+        echo   1. Download and run the .msi installer
+        echo   2. Click Next until finished
+        echo   3. Close this window
+        echo   4. Open a new Command Prompt and run start.bat
+        echo.
+        start "" "https://nodejs.org"
         pause
         exit /b 1
     )
@@ -146,9 +157,20 @@ if %BUILD_INSTALLED%==0 (
     echo [INFO] Downloading Build Tools... ^(about 4MB^)
     call :Download "%VS_URL%" "%VS_EXE%"
     if errorlevel 1 (
-        echo [FAIL] All download methods failed.
-        echo        Please download manually:
-        echo        https://visualstudio.microsoft.com/visual-cpp-build-tools/
+        echo.
+        echo [FAIL] Cannot download automatically.
+        echo.
+        echo Please download manually:
+        echo   https://visualstudio.microsoft.com/visual-cpp-build-tools/
+        echo.
+        echo Steps:
+        echo   1. Click "Download Build Tools"
+        echo   2. Run the downloaded vs_BuildTools.exe
+        echo   3. Select "Desktop development with C++"
+        echo   4. Click Install
+        echo   5. Run this file again after install completes
+        echo.
+        start "" "https://visualstudio.microsoft.com/visual-cpp-build-tools/"
         pause
         exit /b 1
     )
@@ -206,31 +228,42 @@ exit /b 0
 
 :: ════════════════════════════════════════════════
 :: SUBROUTINE: Download <URL> <OutFile>
-:: Tries curl, then PowerShell full path, then bitsadmin
+:: Tries 4 methods in order
 :: ════════════════════════════════════════════════
 :Download
     set "_URL=%~1"
     set "_OUT=%~2"
+    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
 
     :: Method 1: curl (built-in Windows 10 1803+)
-    echo [INFO] Trying curl...
-    curl -L --silent --show-error --output "%_OUT%" "%_URL%" >nul 2>&1
-    if not errorlevel 1 (
-        if exist "%_OUT%" exit /b 0
+    echo [INFO]   Method 1: curl...
+    curl -L --silent --show-error --output "%_OUT%" "%_URL%" 2>nul
+    if exist "%_OUT%" (
+        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
     )
 
-    :: Method 2: PowerShell via full path
-    echo [INFO] Trying PowerShell...
-    "%PS%" -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; (New-Object Net.WebClient).DownloadFile('%_URL%','%_OUT%')" >nul 2>&1
-    if not errorlevel 1 (
-        if exist "%_OUT%" exit /b 0
+    :: Method 2: certutil (built-in ALL Windows since Vista)
+    echo [INFO]   Method 2: certutil...
+    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
+    certutil -urlcache -split -f "%_URL%" "%_OUT%" >nul 2>&1
+    if exist "%_OUT%" (
+        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
     )
 
-    :: Method 3: bitsadmin (old fallback, always exists on Windows)
-    echo [INFO] Trying bitsadmin...
-    bitsadmin /transfer "AllegroAI_Download" /download /priority normal "%_URL%" "%_OUT%" >nul 2>&1
-    if not errorlevel 1 (
-        if exist "%_OUT%" exit /b 0
+    :: Method 3: PowerShell via full path
+    echo [INFO]   Method 3: PowerShell...
+    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
+    "%PS%" -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('%_URL%','%_OUT%')" 2>nul
+    if exist "%_OUT%" (
+        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
+    )
+
+    :: Method 4: bitsadmin (legacy, always on Windows)
+    echo [INFO]   Method 4: bitsadmin...
+    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
+    bitsadmin /transfer "AllegroDownload" /download /priority FOREGROUND "%_URL%" "%_OUT%" >nul 2>&1
+    if exist "%_OUT%" (
+        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
     )
 
     exit /b 1
