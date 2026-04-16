@@ -16,8 +16,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Ensure PowerShell full path is in PATH (some machines strip it)
+set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+set "PATH=%PATH%;%SystemRoot%\System32\WindowsPowerShell\v1.0"
+
 :: ────────────────────────────────────────────────
-:: REFRESH PATH FROM REGISTRY (in case Node was just installed)
+:: REFRESH PATH FROM REGISTRY
 :: ────────────────────────────────────────────────
 call :RefreshPath
 
@@ -61,8 +65,6 @@ if %NODE_INSTALLED%==1 if %BUILD_INSTALLED%==1 (
     echo   All dependencies are already installed!
     echo ================================================
     echo.
-    echo Starting app now...
-    echo.
     goto :StartApp
 )
 
@@ -79,6 +81,12 @@ if /i "%CONFIRM%"=="no" goto :EOF
 echo.
 
 :: ────────────────────────────────────────────────
+:: DOWNLOAD HELPER SUBROUTINE
+:: Tries: curl -> PowerShell -> bitsadmin
+:: Usage: call :Download <URL> <OutFile>
+:: ────────────────────────────────────────────────
+
+:: ────────────────────────────────────────────────
 :: INSTALL NODE.JS
 :: ────────────────────────────────────────────────
 if %NODE_INSTALLED%==0 (
@@ -87,39 +95,38 @@ if %NODE_INSTALLED%==0 (
     echo ================================================
     echo.
 
-    set NODE_MSI=%TEMP%\node-v22-x64.msi
-    set NODE_URL=https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi
+    set "NODE_MSI=%TEMP%\node-v22-x64.msi"
+    set "NODE_URL=https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
 
-    echo [INFO] Downloading Node.js... (about 30MB)
-    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%' -UseBasicParsing"
+    echo [INFO] Downloading Node.js... ^(about 30MB^)
+    call :Download "%NODE_URL%" "%NODE_MSI%"
     if errorlevel 1 (
-        echo [FAIL] Download failed. Check your internet connection.
+        echo [FAIL] All download methods failed.
+        echo        Please download manually: https://nodejs.org
         pause
         exit /b 1
     )
     echo [ OK ] Downloaded
 
-    echo [INFO] Installing Node.js (a progress window will appear)...
+    echo [INFO] Installing Node.js...
     msiexec /i "%NODE_MSI%" /passive ADDLOCAL=ALL
     if errorlevel 1 (
-        echo [FAIL] Installation failed. Try running the MSI manually: %NODE_MSI%
+        echo [FAIL] Installation failed.
         pause
         exit /b 1
     )
     del "%NODE_MSI%" >nul 2>&1
 
-    :: Refresh PATH so node is available immediately
     call :RefreshPath
-
     node --version >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] Node.js installed but not in PATH yet.
-        echo        Close this window, open a new one, then run start.bat
+        echo [WARN] Node.js installed but PATH not updated yet.
+        echo        Close this window, open new CMD, then run start.bat
         pause
         exit /b 0
     )
     for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
-    echo [ OK ] Node.js %NODE_VER% installed successfully!
+    echo [ OK ] Node.js %NODE_VER% installed!
     echo.
 )
 
@@ -129,24 +136,26 @@ if %NODE_INSTALLED%==0 (
 if %BUILD_INSTALLED%==0 (
     echo ================================================
     echo   [2/2] Installing Visual Studio Build Tools...
-    echo   (Required for SQLite compilation)
+    echo   ^(Required for SQLite compilation^)
     echo ================================================
     echo.
 
-    set VS_EXE=%TEMP%\vs_buildtools.exe
-    set VS_URL=https://aka.ms/vs/17/release/vs_buildtools.exe
+    set "VS_EXE=%TEMP%\vs_buildtools.exe"
+    set "VS_URL=https://aka.ms/vs/17/release/vs_buildtools.exe"
 
-    echo [INFO] Downloading Build Tools installer... (about 4MB)
-    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; Invoke-WebRequest -Uri '%VS_URL%' -OutFile '%VS_EXE%' -UseBasicParsing"
+    echo [INFO] Downloading Build Tools... ^(about 4MB^)
+    call :Download "%VS_URL%" "%VS_EXE%"
     if errorlevel 1 (
-        echo [FAIL] Download failed. Check your internet connection.
+        echo [FAIL] All download methods failed.
+        echo        Please download manually:
+        echo        https://visualstudio.microsoft.com/visual-cpp-build-tools/
         pause
         exit /b 1
     )
     echo [ OK ] Downloaded
 
-    echo [INFO] Installing C++ Build Tools...
-    echo [INFO] This will take 5-15 minutes. A progress window will appear.
+    echo [INFO] Installing... This takes 5-15 minutes.
+    echo [INFO] A progress window will appear.
     echo.
     "%VS_EXE%" --wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
     del "%VS_EXE%" >nul 2>&1
@@ -154,14 +163,14 @@ if %BUILD_INSTALLED%==0 (
     echo.
 )
 
-:: ────────────────────────────────────────────────
-:: ALL DONE - START APP
-:: ────────────────────────────────────────────────
 echo ================================================
 echo   Installation complete! Starting app...
 echo ================================================
 echo.
 
+:: ────────────────────────────────────────────────
+:: START APP
+:: ────────────────────────────────────────────────
 :StartApp
 cd /d "%~dp0..\app"
 
@@ -170,15 +179,13 @@ call npm install
 if errorlevel 1 (
     echo.
     echo [FAIL] npm install failed.
-    echo        Make sure Visual Studio Build Tools finished installing.
-    echo        Then run this file again.
+    echo        Re-run this file after Build Tools finishes.
     echo.
     pause
     exit /b 1
 )
 
 if not exist ".env.local" (
-    echo [INFO] Creating .env.local...
     (
         echo # Get free Gemini API Key from https://aistudio.google.com
         echo GEMINI_API_KEY=
@@ -197,9 +204,40 @@ call npm run dev
 pause
 exit /b 0
 
-:: ────────────────────────────────────────────────
-:: SUBROUTINE: Refresh PATH from registry
-:: ────────────────────────────────────────────────
+:: ════════════════════════════════════════════════
+:: SUBROUTINE: Download <URL> <OutFile>
+:: Tries curl, then PowerShell full path, then bitsadmin
+:: ════════════════════════════════════════════════
+:Download
+    set "_URL=%~1"
+    set "_OUT=%~2"
+
+    :: Method 1: curl (built-in Windows 10 1803+)
+    echo [INFO] Trying curl...
+    curl -L --silent --show-error --output "%_OUT%" "%_URL%" >nul 2>&1
+    if not errorlevel 1 (
+        if exist "%_OUT%" exit /b 0
+    )
+
+    :: Method 2: PowerShell via full path
+    echo [INFO] Trying PowerShell...
+    "%PS%" -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; (New-Object Net.WebClient).DownloadFile('%_URL%','%_OUT%')" >nul 2>&1
+    if not errorlevel 1 (
+        if exist "%_OUT%" exit /b 0
+    )
+
+    :: Method 3: bitsadmin (old fallback, always exists on Windows)
+    echo [INFO] Trying bitsadmin...
+    bitsadmin /transfer "AllegroAI_Download" /download /priority normal "%_URL%" "%_OUT%" >nul 2>&1
+    if not errorlevel 1 (
+        if exist "%_OUT%" exit /b 0
+    )
+
+    exit /b 1
+
+:: ════════════════════════════════════════════════
+:: SUBROUTINE: RefreshPath
+:: ════════════════════════════════════════════════
 :RefreshPath
     for /f "skip=2 tokens=3*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH 2^>nul') do (
         if "%%b"=="" (set "SYS_PATH=%%a") else (set "SYS_PATH=%%a %%b")
@@ -209,6 +247,5 @@ exit /b 0
     )
     if defined SYS_PATH set "PATH=%SYS_PATH%"
     if defined USR_PATH set "PATH=%PATH%;%USR_PATH%"
-    :: Always add common Node.js locations
-    set "PATH=%PATH%;%ProgramFiles%\nodejs;%APPDATA%\npm"
+    set "PATH=%PATH%;%ProgramFiles%\nodejs;%APPDATA%\npm;%SystemRoot%\System32\WindowsPowerShell\v1.0"
 exit /b 0
