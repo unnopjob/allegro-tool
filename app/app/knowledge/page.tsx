@@ -22,10 +22,14 @@ export default function KnowledgePage() {
   useEffect(() => { loadFiles(); }, []);
 
   async function loadFiles() {
-    const r = await fetch('/api/knowledge');
-    if (r.ok) {
-      const d = await r.json();
-      setFiles(d.files);
+    try {
+      const r = await fetch('/api/knowledge');
+      if (r.ok) {
+        const d = await r.json();
+        setFiles(d.files);
+      }
+    } catch {
+      // Network error — leave existing file list unchanged
     }
   }
 

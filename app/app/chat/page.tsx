@@ -49,7 +49,8 @@ export default function ChatPage() {
         body: JSON.stringify({ messages: allMessages, sessionId, useKnowledge, useNetworkContext }),
       });
 
-      const reader = res.body!.getReader();
+      if (!res.body) throw new Error('No response stream');
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
       while (true) {

@@ -46,7 +46,8 @@ export default function AskAI({ context, contextType, buttonLabel = 'ถาม A
         body: JSON.stringify({ question: q, context, contextType }),
       });
 
-      const reader = res.body!.getReader();
+      if (!res.body) throw new Error('No response stream');
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
       while (true) {

@@ -27,10 +27,15 @@ export default function DevicesPage() {
   }
 
   async function loadDevices() {
-    const res = await fetch('/api/devices');
-    const data = await res.json();
-    setDevices(data.devices || []);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/devices');
+      const data = await res.json();
+      setDevices(data.devices || []);
+    } catch {
+      // Network error — leave existing device list unchanged
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadDevices(); }, []);

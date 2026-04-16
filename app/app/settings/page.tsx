@@ -19,7 +19,7 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(data => {
       setHasKey(data.hasGeminiKey || false);
-    });
+    }).catch(() => {});
   }, []);
 
   async function handleSave() {

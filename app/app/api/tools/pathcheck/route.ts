@@ -46,10 +46,20 @@ async function runTraceroute(ip: string): Promise<{ hop: number; ip: string; rtt
     const { stdout } = await execAsync(cmd, { timeout: 30000 });
     const hops: { hop: number; ip: string; rttMs: number | null }[] = [];
     for (const line of stdout.split('\n')) {
-      const m = isWindows
-        ? line.match(/^\s*(\d+)\s+[\d<]+\s*ms.*?([\d.]+)\s*$/)
-        : line.match(/^\s*(\d+)\s+([\d.]+)\s+([\d.]+)\s*ms/);
-      if (m) hops.push({ hop: parseInt(m[1]), ip: m[2], rttMs: m[3] ? parseFloat(m[3]) : null });
+      if (isWindows) {
+        // Windows tracert line: "  1    <1 ms    <1 ms    <1 ms  192.168.1.1"
+        // Capture: group 1 = hop, group 2 = first RTT (may be "<1" or digits), group 3 = IP
+        const m = line.match(/^\s*(\d+)\s+[<\d]+\s*ms.*?([\d.]+)\s*$/);
+        if (m) {
+          // Try to extract the first numeric RTT from the line
+          const rttMatch = line.match(/(\d+)\s*ms/);
+          hops.push({ hop: parseInt(m[1]), ip: m[2], rttMs: rttMatch ? parseFloat(rttMatch[1]) : null });
+        }
+      } else {
+        // Unix traceroute line: "  1  192.168.1.1  0.456 ms"
+        const m = line.match(/^\s*(\d+)\s+([\d.]+)\s+([\d.]+)\s*ms/);
+        if (m) hops.push({ hop: parseInt(m[1]), ip: m[2], rttMs: m[3] ? parseFloat(m[3]) : null });
+      }
     }
     return hops;
   } catch {
