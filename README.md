@@ -15,7 +15,7 @@ AI-powered network monitoring and troubleshooting dashboard สำหรับ [
 | 💬 **AI Chat** | สนทนากับ AI พร้อม Network Context สด + Knowledge Base |
 | 📚 **Knowledge Base** | อัปโหลด PDF/TXT/CSV/JSON ให้ AI อ้างอิง |
 | ⚙️ **Device Manager** | จัดการ Allegro device หลายเครื่อง, test connection |
-| 🪟 **Windows Ready** | ดับเบิลคลิก `start.bat` — ติดตั้ง dependency อัตโนมัติ |
+| 🪟 **Windows Ready** | ดับเบิลคลิก `install-deps.bat` ติดตั้ง Node.js + Build Tools อัตโนมัติ แล้วรัน `start.bat` |
 
 ---
 
@@ -38,13 +38,21 @@ Dashboard                Analysis               Chat
 
 ## 🚀 Quick Start
 
-### Windows
+### Windows (แนะนำ)
 
-1. ดาวน์โหลดและแตก zip
-2. ดับเบิลคลิก `windows/start.bat`
-3. เปิด browser → http://localhost:3000
+**ครั้งแรก — ติดตั้ง dependencies อัตโนมัติ:**
 
-> **ต้องการ:** [Node.js v18+](https://nodejs.org) และ [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+1. คลิกขวา `windows\install-deps.bat` → **"Run as administrator"**
+2. กด **Y** เพื่อติดตั้ง Node.js + Visual Studio Build Tools
+3. รอ 5–15 นาที จนเสร็จ
+4. **ปิด CMD แล้วเปิดใหม่** (สำคัญ)
+
+**รันแอป (ทุกครั้ง):**
+
+5. ดับเบิลคลิก `windows\start.bat`
+6. เปิด browser → http://localhost:3000
+
+> **หมายเหตุ:** ถ้ามี Node.js อยู่แล้ว ข้ามขั้นตอน 1–4 รัน `start.bat` ได้เลย
 
 ### macOS / Linux
 
@@ -87,7 +95,7 @@ GEMINI_API_KEY=AIzaSy...
 | AI | Google Gemini 2.0 Flash (streaming) |
 | Database | SQLite (better-sqlite3) — local only |
 | Backend | Next.js API Routes (Node.js) |
-| Launcher | Batch script (Windows) |
+| Launcher | Batch scripts (Windows) |
 
 ---
 
@@ -114,9 +122,24 @@ allegro-ai/
 │       ├── db.ts           # SQLite database
 │       └── pcap-parser.ts  # PCAP file parser
 ├── windows/
-│   └── start.bat           # Windows launcher
+│   ├── install-deps.bat    # Auto-install Node.js + Build Tools (run first)
+│   └── start.bat           # Launch the app
 └── .gitignore
 ```
+
+---
+
+## 🪟 Windows Files
+
+| File | Description |
+|---|---|
+| `windows\install-deps.bat` | ติดตั้ง Node.js LTS + Visual Studio Build Tools อัตโนมัติ (รันครั้งแรกครั้งเดียว) |
+| `windows\start.bat` | รัน npm install + เริ่ม server ทุกครั้ง |
+
+**install-deps.bat ทำอะไร:**
+- ตรวจสอบว่ามี Node.js และ Build Tools ครบหรือยัง
+- ถ้าขาด → ดาวน์โหลดและติดตั้งอัตโนมัติ (ผ่าน winget หรือ direct download)
+- ถ้าครบแล้ว → แจ้งว่าพร้อมใช้งาน ออกทันที
 
 ---
 
@@ -147,10 +170,12 @@ allegro-ai/
 
 ## 📋 Requirements
 
-- Node.js v18 หรือสูงกว่า
-- Allegro Network Multimeter (firmware 4.x ขึ้นไป)
-- Google Gemini API Key (ฟรีที่ aistudio.google.com)
-- Windows: Visual Studio Build Tools (สำหรับ better-sqlite3)
+| | Requirement |
+|---|---|
+| **Runtime** | Node.js v18 หรือสูงกว่า |
+| **Device** | Allegro Network Multimeter (firmware 4.x ขึ้นไป) |
+| **AI** | Google Gemini API Key (ฟรีที่ [aistudio.google.com](https://aistudio.google.com)) |
+| **Windows build** | Visual Studio Build Tools (สำหรับ better-sqlite3) — ติดตั้งอัตโนมัติด้วย `install-deps.bat` |
 
 ---
 
