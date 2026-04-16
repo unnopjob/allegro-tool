@@ -1,0 +1,32 @@
+# Dependencies
+app/node_modules/
+
+# Next.js build output
+app/.next/
+
+# Local database (ข้อมูลส่วนตัว)
+app/data/
+
+# Environment variables (API Keys - ห้าม commit!)
+app/.env.local
+app/.env*.local
+.env
+.env.local
+
+# Rust build output
+start-rs/target/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Logs
+*.log
+npm-debug.log*

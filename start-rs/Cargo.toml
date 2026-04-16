@@ -1,0 +1,11 @@
+[package]
+name = "start"
+version = "0.1.0"
+edition = "2021"
+description = "Web AI — Next.js dev server launcher"
+
+[[bin]]
+name = "start"
+path = "src/main.rs"
+
+[dependencies]
