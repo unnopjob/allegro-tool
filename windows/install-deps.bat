@@ -10,18 +10,21 @@ echo.
 net session >nul 2>&1
 if errorlevel 1 (
     echo [WARN] Not running as Administrator.
-    echo        Some installations may fail.
-    echo        Right-click install-deps.bat and choose "Run as administrator"
+    echo        Right-click install-deps.bat ^> "Run as administrator"
     echo.
     pause
+    exit /b 1
 )
+
+:: ────────────────────────────────────────────────
+:: REFRESH PATH FROM REGISTRY (in case Node was just installed)
+:: ────────────────────────────────────────────────
+call :RefreshPath
 
 set NODE_INSTALLED=0
 set BUILD_INSTALLED=0
 
-:: ────────────────────────────────────────────────
-:: CHECK NODE.JS
-:: ────────────────────────────────────────────────
+:: ── Check Node.js ────────────────────────────────
 echo [CHECK] Node.js...
 node --version >nul 2>&1
 if not errorlevel 1 (
@@ -29,64 +32,50 @@ if not errorlevel 1 (
     echo [ OK ]  Node.js %NODE_VER% is already installed
     set NODE_INSTALLED=1
 ) else (
-    echo [MISS]  Node.js not found
+    echo [MISS]  Node.js not found - will install
 )
 
-:: ────────────────────────────────────────────────
-:: CHECK BUILD TOOLS (look for cl.exe or node-gyp requirement)
-:: ────────────────────────────────────────────────
+:: ── Check Build Tools ────────────────────────────
 echo [CHECK] Visual Studio Build Tools...
-where cl.exe >nul 2>&1
-if not errorlevel 1 (
-    echo [ OK ]  Visual Studio Build Tools already installed
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" (
+    echo [ OK ]  Visual Studio Build Tools 2022 already installed
+    set BUILD_INSTALLED=1
+) else if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" (
+    echo [ OK ]  Visual Studio Build Tools 2022 already installed
     set BUILD_INSTALLED=1
 ) else (
-    :: Check if msbuild exists as fallback
-    where msbuild >nul 2>&1
+    where cl.exe >nul 2>&1
     if not errorlevel 1 (
-        echo [ OK ]  MSBuild found (Build Tools available)
+        echo [ OK ]  C++ compiler found
         set BUILD_INSTALLED=1
     ) else (
-        echo [MISS]  Visual Studio Build Tools not found
+        echo [MISS]  Visual Studio Build Tools not found - will install
     )
 )
 
 echo.
 
-:: ────────────────────────────────────────────────
-:: NOTHING TO DO
-:: ────────────────────────────────────────────────
+:: ── All installed already ────────────────────────
 if %NODE_INSTALLED%==1 if %BUILD_INSTALLED%==1 (
     echo ================================================
     echo   All dependencies are already installed!
-    echo   You can run start.bat now.
     echo ================================================
     echo.
-    pause
-    exit /b 0
+    echo Starting app now...
+    echo.
+    goto :StartApp
 )
 
-:: ────────────────────────────────────────────────
-:: SHOW WHAT WILL BE INSTALLED
-:: ────────────────────────────────────────────────
-echo The following will be installed:
-if %NODE_INSTALLED%==0  echo   - Node.js v22 LTS  (from nodejs.org)
-if %BUILD_INSTALLED%==0 echo   - Visual Studio Build Tools 2022  (from microsoft.com)
+:: ── Confirm ──────────────────────────────────────
+echo Will install:
+if %NODE_INSTALLED%==0  echo   [1] Node.js v22 LTS
+if %BUILD_INSTALLED%==0 echo   [2] Visual Studio Build Tools 2022
 echo.
-echo This may take 5-15 minutes depending on your internet speed.
+echo This may take 10-20 minutes.
 echo.
 set /p CONFIRM=Continue? (Y/n):
-if /i "%CONFIRM%"=="n" (
-    echo Cancelled.
-    pause
-    exit /b 0
-)
-if /i "%CONFIRM%"=="no" (
-    echo Cancelled.
-    pause
-    exit /b 0
-)
-
+if /i "%CONFIRM%"=="n" goto :EOF
+if /i "%CONFIRM%"=="no" goto :EOF
 echo.
 
 :: ────────────────────────────────────────────────
@@ -94,48 +83,43 @@ echo.
 :: ────────────────────────────────────────────────
 if %NODE_INSTALLED%==0 (
     echo ================================================
-    echo   Installing Node.js v22 LTS...
+    echo   [1/2] Installing Node.js v22 LTS...
     echo ================================================
+    echo.
 
-    :: Try winget first (Windows 11 / updated Windows 10)
-    winget --version >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Using winget to install Node.js...
-        winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
-        if not errorlevel 1 (
-            echo [ OK ] Node.js installed via winget
-            goto :node_done
-        )
-        echo [WARN] winget install failed, trying direct download...
-    )
-
-    :: Download installer directly
-    echo [INFO] Downloading Node.js installer...
+    set NODE_MSI=%TEMP%\node-v22-x64.msi
     set NODE_URL=https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi
-    set NODE_MSI=%TEMP%\node-installer.msi
 
-    :: Use PowerShell to download
-    powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol='Tls12'; Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%' -UseBasicParsing}" >nul 2>&1
+    echo [INFO] Downloading Node.js... (about 30MB)
+    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%' -UseBasicParsing"
     if errorlevel 1 (
-        echo [FAIL] Download failed. Please install manually:
-        echo        https://nodejs.org  (Download LTS)
-        echo.
+        echo [FAIL] Download failed. Check your internet connection.
         pause
         exit /b 1
     )
+    echo [ OK ] Downloaded
 
-    echo [INFO] Running Node.js installer (silent)...
-    msiexec /i "%NODE_MSI%" /quiet /norestart ADDLOCAL=ALL
+    echo [INFO] Installing Node.js (a progress window will appear)...
+    msiexec /i "%NODE_MSI%" /passive ADDLOCAL=ALL
     if errorlevel 1 (
-        echo [FAIL] Node.js installation failed.
-        echo        Try running installer manually: %NODE_MSI%
+        echo [FAIL] Installation failed. Try running the MSI manually: %NODE_MSI%
         pause
         exit /b 1
     )
     del "%NODE_MSI%" >nul 2>&1
-    echo [ OK ] Node.js installed successfully
 
-    :node_done
+    :: Refresh PATH so node is available immediately
+    call :RefreshPath
+
+    node --version >nul 2>&1
+    if errorlevel 1 (
+        echo [WARN] Node.js installed but not in PATH yet.
+        echo        Close this window, open a new one, then run start.bat
+        pause
+        exit /b 0
+    )
+    for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
+    echo [ OK ] Node.js %NODE_VER% installed successfully!
     echo.
 )
 
@@ -144,68 +128,87 @@ if %NODE_INSTALLED%==0 (
 :: ────────────────────────────────────────────────
 if %BUILD_INSTALLED%==0 (
     echo ================================================
-    echo   Installing Visual Studio Build Tools 2022...
-    echo   (Required for better-sqlite3 compilation)
+    echo   [2/2] Installing Visual Studio Build Tools...
+    echo   (Required for SQLite compilation)
     echo ================================================
     echo.
 
-    :: Try winget first
-    winget --version >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Using winget to install Build Tools...
-        winget install Microsoft.VisualStudio.2022.BuildTools --silent --accept-package-agreements --accept-source-agreements --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-        if not errorlevel 1 (
-            echo [ OK ] Build Tools installed via winget
-            goto :build_done
-        )
-        echo [WARN] winget install failed, trying direct download...
-    )
-
-    :: Download installer directly
-    echo [INFO] Downloading Visual Studio Build Tools installer...
-    set VS_URL=https://aka.ms/vs/17/release/vs_buildtools.exe
     set VS_EXE=%TEMP%\vs_buildtools.exe
+    set VS_URL=https://aka.ms/vs/17/release/vs_buildtools.exe
 
-    powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol='Tls12'; Invoke-WebRequest -Uri '%VS_URL%' -OutFile '%VS_EXE%' -UseBasicParsing}" >nul 2>&1
+    echo [INFO] Downloading Build Tools installer... (about 4MB)
+    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12,Tls13'; Invoke-WebRequest -Uri '%VS_URL%' -OutFile '%VS_EXE%' -UseBasicParsing"
     if errorlevel 1 (
-        echo [FAIL] Download failed. Please install manually:
-        echo        https://visualstudio.microsoft.com/visual-cpp-build-tools/
-        echo        Select: "Desktop development with C++"
-        echo.
+        echo [FAIL] Download failed. Check your internet connection.
         pause
         exit /b 1
     )
+    echo [ OK ] Downloaded
 
-    echo [INFO] Running Build Tools installer...
-    echo [INFO] This will take several minutes, please wait...
+    echo [INFO] Installing C++ Build Tools...
+    echo [INFO] This will take 5-15 minutes. A progress window will appear.
     echo.
-    "%VS_EXE%" --wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
-    if errorlevel 1 (
-        echo [FAIL] Build Tools installation failed.
-        echo        Try installing manually from:
-        echo        https://visualstudio.microsoft.com/visual-cpp-build-tools/
-        pause
-        exit /b 1
-    )
+    "%VS_EXE%" --wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
     del "%VS_EXE%" >nul 2>&1
-    echo [ OK ] Build Tools installed successfully
-
-    :build_done
+    echo [ OK ] Build Tools installed!
     echo.
 )
 
 :: ────────────────────────────────────────────────
-:: DONE
+:: ALL DONE - START APP
 :: ────────────────────────────────────────────────
+echo ================================================
+echo   Installation complete! Starting app...
+echo ================================================
+echo.
+
+:StartApp
+cd /d "%~dp0..\app"
+
+echo [INFO] Installing npm packages...
+call npm install
+if errorlevel 1 (
+    echo.
+    echo [FAIL] npm install failed.
+    echo        Make sure Visual Studio Build Tools finished installing.
+    echo        Then run this file again.
+    echo.
+    pause
+    exit /b 1
+)
+
+if not exist ".env.local" (
+    echo [INFO] Creating .env.local...
+    (
+        echo # Get free Gemini API Key from https://aistudio.google.com
+        echo GEMINI_API_KEY=
+        echo NEXTAUTH_SECRET=%RANDOM%%RANDOM%%RANDOM%%RANDOM%
+    ) > .env.local
+    echo [ OK ] Created .env.local
+)
+
 echo.
 echo ================================================
-echo   Installation Complete!
+echo   Ready!  Open browser: http://localhost:3000
+echo   Press Ctrl+C to stop
 echo ================================================
 echo.
-echo IMPORTANT: Please CLOSE this window and
-echo            open a NEW Command Prompt before
-echo            running start.bat
-echo.
-echo (This is required so Windows loads the new PATH)
-echo.
+call npm run dev
 pause
+exit /b 0
+
+:: ────────────────────────────────────────────────
+:: SUBROUTINE: Refresh PATH from registry
+:: ────────────────────────────────────────────────
+:RefreshPath
+    for /f "skip=2 tokens=3*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH 2^>nul') do (
+        if "%%b"=="" (set "SYS_PATH=%%a") else (set "SYS_PATH=%%a %%b")
+    )
+    for /f "skip=2 tokens=3*" %%a in ('reg query "HKCU\Environment" /v PATH 2^>nul') do (
+        if "%%b"=="" (set "USR_PATH=%%a") else (set "USR_PATH=%%a %%b")
+    )
+    if defined SYS_PATH set "PATH=%SYS_PATH%"
+    if defined USR_PATH set "PATH=%PATH%;%USR_PATH%"
+    :: Always add common Node.js locations
+    set "PATH=%PATH%;%ProgramFiles%\nodejs;%APPDATA%\npm"
+exit /b 0
