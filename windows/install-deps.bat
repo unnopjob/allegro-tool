@@ -1,199 +1,74 @@
 @echo off
-title Allegro AI - Install Dependencies
+title Allegro AI - Setup Check
 echo.
 echo ================================================
-echo    Allegro AI - Install Required Dependencies
+echo    Allegro AI - Setup Check
 echo ================================================
 echo.
 
-:: Must run as Administrator
-net session >nul 2>&1
+:: Refresh PATH to pick up recently installed software
+for /f "skip=2 tokens=3*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH 2^>nul') do set "PATH=%%a %%b"
+set "PATH=%PATH%;%ProgramFiles%\nodejs;%APPDATA%\npm"
+
+:: ────────────────────────────────────────────────
+:: CHECK NODE.JS
+:: ────────────────────────────────────────────────
+echo [1/2] Checking Node.js...
+node --version >nul 2>&1
 if errorlevel 1 (
-    echo [WARN] Not running as Administrator.
-    echo        Right-click install-deps.bat ^> "Run as administrator"
+    echo.
+    echo [FAIL] Node.js not found!
+    echo.
+    echo  Please install Node.js:
+    echo  1. A browser window will open now
+    echo  2. Click "Download Node.js LTS"  ^(left button^)
+    echo  3. Run the installer, click Next until done
+    echo  4. CLOSE this window
+    echo  5. Run install-deps.bat again
     echo.
     pause
+    start "" "https://nodejs.org"
     exit /b 1
 )
-
-:: Ensure PowerShell full path is in PATH (some machines strip it)
-set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
-set "PATH=%PATH%;%SystemRoot%\System32\WindowsPowerShell\v1.0"
+for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
+echo [ OK ] Node.js %NODE_VER%
 
 :: ────────────────────────────────────────────────
-:: REFRESH PATH FROM REGISTRY
+:: CHECK BUILD TOOLS
 :: ────────────────────────────────────────────────
-call :RefreshPath
+echo [2/2] Checking Visual Studio Build Tools...
+set BUILD_OK=0
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" set BUILD_OK=1
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" set BUILD_OK=1
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC" set BUILD_OK=1
+where cl.exe >nul 2>&1
+if not errorlevel 1 set BUILD_OK=1
 
-set NODE_INSTALLED=0
-set BUILD_INSTALLED=0
-
-:: ── Check Node.js ────────────────────────────────
-echo [CHECK] Node.js...
-node --version >nul 2>&1
-if not errorlevel 1 (
-    for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
-    echo [ OK ]  Node.js %NODE_VER% is already installed
-    set NODE_INSTALLED=1
-) else (
-    echo [MISS]  Node.js not found - will install
+if %BUILD_OK%==0 (
+    echo.
+    echo [FAIL] Visual Studio Build Tools not found!
+    echo.
+    echo  Please install Build Tools:
+    echo  1. A browser window will open now
+    echo  2. Click "Download Build Tools"
+    echo  3. Run the installer
+    echo  4. Check "Desktop development with C++"
+    echo  5. Click Install and wait ^(~10 min^)
+    echo  6. CLOSE this window
+    echo  7. Run install-deps.bat again
+    echo.
+    pause
+    start "" "https://visualstudio.microsoft.com/visual-cpp-build-tools/"
+    exit /b 1
 )
+echo [ OK ] Build Tools found
 
-:: ── Check Build Tools ────────────────────────────
-echo [CHECK] Visual Studio Build Tools...
-if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" (
-    echo [ OK ]  Visual Studio Build Tools 2022 already installed
-    set BUILD_INSTALLED=1
-) else if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC" (
-    echo [ OK ]  Visual Studio Build Tools 2022 already installed
-    set BUILD_INSTALLED=1
-) else (
-    where cl.exe >nul 2>&1
-    if not errorlevel 1 (
-        echo [ OK ]  C++ compiler found
-        set BUILD_INSTALLED=1
-    ) else (
-        echo [MISS]  Visual Studio Build Tools not found - will install
-    )
-)
-
+:: ────────────────────────────────────────────────
+:: ALL GOOD - RUN APP
+:: ────────────────────────────────────────────────
 echo.
-
-:: ── All installed already ────────────────────────
-if %NODE_INSTALLED%==1 if %BUILD_INSTALLED%==1 (
-    echo ================================================
-    echo   All dependencies are already installed!
-    echo ================================================
-    echo.
-    goto :StartApp
-)
-
-:: ── Confirm ──────────────────────────────────────
-echo Will install:
-if %NODE_INSTALLED%==0  echo   [1] Node.js v22 LTS
-if %BUILD_INSTALLED%==0 echo   [2] Visual Studio Build Tools 2022
+echo [ OK ] All dependencies ready!
 echo.
-echo This may take 10-20 minutes.
-echo.
-set /p CONFIRM=Continue? (Y/n):
-if /i "%CONFIRM%"=="n" goto :EOF
-if /i "%CONFIRM%"=="no" goto :EOF
-echo.
-
-:: ────────────────────────────────────────────────
-:: DOWNLOAD HELPER SUBROUTINE
-:: Tries: curl -> PowerShell -> bitsadmin
-:: Usage: call :Download <URL> <OutFile>
-:: ────────────────────────────────────────────────
-
-:: ────────────────────────────────────────────────
-:: INSTALL NODE.JS
-:: ────────────────────────────────────────────────
-if %NODE_INSTALLED%==0 (
-    echo ================================================
-    echo   [1/2] Installing Node.js v22 LTS...
-    echo ================================================
-    echo.
-
-    set "NODE_MSI=%TEMP%\node-v22-x64.msi"
-    set "NODE_URL=https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
-
-    echo [INFO] Downloading Node.js... ^(about 30MB^)
-    call :Download "%NODE_URL%" "%NODE_MSI%"
-    if errorlevel 1 (
-        echo.
-        echo [FAIL] Cannot download automatically.
-        echo.
-        echo Please download manually:
-        echo   https://nodejs.org  (click "Download Node.js LTS")
-        echo.
-        echo Steps:
-        echo   1. Download and run the .msi installer
-        echo   2. Click Next until finished
-        echo   3. Close this window
-        echo   4. Open a new Command Prompt and run start.bat
-        echo.
-        start "" "https://nodejs.org"
-        pause
-        exit /b 1
-    )
-    echo [ OK ] Downloaded
-
-    echo [INFO] Installing Node.js...
-    msiexec /i "%NODE_MSI%" /passive ADDLOCAL=ALL
-    if errorlevel 1 (
-        echo [FAIL] Installation failed.
-        pause
-        exit /b 1
-    )
-    del "%NODE_MSI%" >nul 2>&1
-
-    call :RefreshPath
-    node --version >nul 2>&1
-    if errorlevel 1 (
-        echo [WARN] Node.js installed but PATH not updated yet.
-        echo        Close this window, open new CMD, then run start.bat
-        pause
-        exit /b 0
-    )
-    for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
-    echo [ OK ] Node.js %NODE_VER% installed!
-    echo.
-)
-
-:: ────────────────────────────────────────────────
-:: INSTALL VISUAL STUDIO BUILD TOOLS
-:: ────────────────────────────────────────────────
-if %BUILD_INSTALLED%==0 (
-    echo ================================================
-    echo   [2/2] Installing Visual Studio Build Tools...
-    echo   ^(Required for SQLite compilation^)
-    echo ================================================
-    echo.
-
-    set "VS_EXE=%TEMP%\vs_buildtools.exe"
-    set "VS_URL=https://aka.ms/vs/17/release/vs_buildtools.exe"
-
-    echo [INFO] Downloading Build Tools... ^(about 4MB^)
-    call :Download "%VS_URL%" "%VS_EXE%"
-    if errorlevel 1 (
-        echo.
-        echo [FAIL] Cannot download automatically.
-        echo.
-        echo Please download manually:
-        echo   https://visualstudio.microsoft.com/visual-cpp-build-tools/
-        echo.
-        echo Steps:
-        echo   1. Click "Download Build Tools"
-        echo   2. Run the downloaded vs_BuildTools.exe
-        echo   3. Select "Desktop development with C++"
-        echo   4. Click Install
-        echo   5. Run this file again after install completes
-        echo.
-        start "" "https://visualstudio.microsoft.com/visual-cpp-build-tools/"
-        pause
-        exit /b 1
-    )
-    echo [ OK ] Downloaded
-
-    echo [INFO] Installing... This takes 5-15 minutes.
-    echo [INFO] A progress window will appear.
-    echo.
-    "%VS_EXE%" --wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
-    del "%VS_EXE%" >nul 2>&1
-    echo [ OK ] Build Tools installed!
-    echo.
-)
-
-echo ================================================
-echo   Installation complete! Starting app...
-echo ================================================
-echo.
-
-:: ────────────────────────────────────────────────
-:: START APP
-:: ────────────────────────────────────────────────
-:StartApp
 cd /d "%~dp0..\app"
 
 echo [INFO] Installing npm packages...
@@ -201,7 +76,7 @@ call npm install
 if errorlevel 1 (
     echo.
     echo [FAIL] npm install failed.
-    echo        Re-run this file after Build Tools finishes.
+    echo        Try restarting your PC and run this file again.
     echo.
     pause
     exit /b 1
@@ -209,7 +84,6 @@ if errorlevel 1 (
 
 if not exist ".env.local" (
     (
-        echo # Get free Gemini API Key from https://aistudio.google.com
         echo GEMINI_API_KEY=
         echo NEXTAUTH_SECRET=%RANDOM%%RANDOM%%RANDOM%%RANDOM%
     ) > .env.local
@@ -218,67 +92,9 @@ if not exist ".env.local" (
 
 echo.
 echo ================================================
-echo   Ready!  Open browser: http://localhost:3000
+echo   Ready!  Open: http://localhost:3000
 echo   Press Ctrl+C to stop
 echo ================================================
 echo.
 call npm run dev
 pause
-exit /b 0
-
-:: ════════════════════════════════════════════════
-:: SUBROUTINE: Download <URL> <OutFile>
-:: Tries 4 methods in order
-:: ════════════════════════════════════════════════
-:Download
-    set "_URL=%~1"
-    set "_OUT=%~2"
-    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
-
-    :: Method 1: curl (built-in Windows 10 1803+)
-    echo [INFO]   Method 1: curl...
-    curl -L --silent --show-error --output "%_OUT%" "%_URL%" 2>nul
-    if exist "%_OUT%" (
-        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
-    )
-
-    :: Method 2: certutil (built-in ALL Windows since Vista)
-    echo [INFO]   Method 2: certutil...
-    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
-    certutil -urlcache -split -f "%_URL%" "%_OUT%" >nul 2>&1
-    if exist "%_OUT%" (
-        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
-    )
-
-    :: Method 3: PowerShell via full path
-    echo [INFO]   Method 3: PowerShell...
-    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
-    "%PS%" -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('%_URL%','%_OUT%')" 2>nul
-    if exist "%_OUT%" (
-        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
-    )
-
-    :: Method 4: bitsadmin (legacy, always on Windows)
-    echo [INFO]   Method 4: bitsadmin...
-    if exist "%_OUT%" del "%_OUT%" >nul 2>&1
-    bitsadmin /transfer "AllegroDownload" /download /priority FOREGROUND "%_URL%" "%_OUT%" >nul 2>&1
-    if exist "%_OUT%" (
-        for %%F in ("%_OUT%") do if %%~zF GTR 1000 exit /b 0
-    )
-
-    exit /b 1
-
-:: ════════════════════════════════════════════════
-:: SUBROUTINE: RefreshPath
-:: ════════════════════════════════════════════════
-:RefreshPath
-    for /f "skip=2 tokens=3*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH 2^>nul') do (
-        if "%%b"=="" (set "SYS_PATH=%%a") else (set "SYS_PATH=%%a %%b")
-    )
-    for /f "skip=2 tokens=3*" %%a in ('reg query "HKCU\Environment" /v PATH 2^>nul') do (
-        if "%%b"=="" (set "USR_PATH=%%a") else (set "USR_PATH=%%a %%b")
-    )
-    if defined SYS_PATH set "PATH=%SYS_PATH%"
-    if defined USR_PATH set "PATH=%PATH%;%USR_PATH%"
-    set "PATH=%PATH%;%ProgramFiles%\nodejs;%APPDATA%\npm;%SystemRoot%\System32\WindowsPowerShell\v1.0"
-exit /b 0
