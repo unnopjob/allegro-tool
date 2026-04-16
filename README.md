@@ -15,7 +15,7 @@ AI-powered network monitoring and troubleshooting dashboard สำหรับ [
 | 💬 **AI Chat** | สนทนากับ AI พร้อม Network Context สด + Knowledge Base |
 | 📚 **Knowledge Base** | อัปโหลด PDF/TXT/CSV/JSON ให้ AI อ้างอิง |
 | ⚙️ **Device Manager** | จัดการ Allegro device หลายเครื่อง, test connection |
-| 🪟 **Windows Ready** | ดับเบิลคลิก `install-deps.bat` ติดตั้ง Node.js + Build Tools อัตโนมัติ แล้วรัน `start.bat` |
+| 🪟 **Windows Ready** | ติดตั้ง Node.js ครั้งเดียว → ดับเบิลคลิก `install-deps.bat` → เสร็จ |
 
 ---
 
@@ -38,21 +38,15 @@ Dashboard                Analysis               Chat
 
 ## 🚀 Quick Start
 
-### Windows (แนะนำ)
+### Windows
 
-**ครั้งแรก — ติดตั้ง dependencies อัตโนมัติ:**
+**ครั้งแรก (ทำครั้งเดียว):**
 
-1. คลิกขวา `windows\install-deps.bat` → **"Run as administrator"**
-2. กด **Y** เพื่อติดตั้ง Node.js + Visual Studio Build Tools
-3. รอ 5–15 นาที จนเสร็จ
-4. **ปิด CMD แล้วเปิดใหม่** (สำคัญ)
+1. ติดตั้ง [Node.js LTS](https://nodejs.org) — กด Download แล้ว Next ไปจนเสร็จ
+2. ดับเบิลคลิก `windows\install-deps.bat`
+3. เปิด browser → **http://localhost:3000**
 
-**รันแอป (ทุกครั้ง):**
-
-5. ดับเบิลคลิก `windows\start.bat`
-6. เปิด browser → http://localhost:3000
-
-> **หมายเหตุ:** ถ้ามี Node.js อยู่แล้ว ข้ามขั้นตอน 1–4 รัน `start.bat` ได้เลย
+> ครั้งต่อไป: ดับเบิลคลิก `windows\install-deps.bat` ได้เลย ไม่ต้องทำอะไรเพิ่ม
 
 ### macOS / Linux
 
@@ -93,9 +87,9 @@ GEMINI_API_KEY=AIzaSy...
 |---|---|
 | Frontend | Next.js 16, TypeScript, Tailwind CSS |
 | AI | Google Gemini 2.0 Flash (streaming) |
-| Database | SQLite (better-sqlite3) — local only |
+| Storage | JSON files (ไม่ต้องติดตั้ง database) |
 | Backend | Next.js API Routes (Node.js) |
-| Launcher | Batch scripts (Windows) |
+| Launcher | Batch script (Windows) |
 
 ---
 
@@ -113,33 +107,38 @@ allegro-ai/
 │   │   ├── settings/       # API key settings
 │   │   ├── help/           # User manual
 │   │   └── api/            # Backend API routes
-│   ├── components/         # Shared components
+│   ├── components/
 │   │   ├── Navbar.tsx
 │   │   └── AskAI.tsx       # Floating AI assistant
-│   └── lib/                # Core libraries
-│       ├── allegro.ts      # Allegro API client
-│       ├── gemini.ts       # Gemini AI client
-│       ├── db.ts           # SQLite database
-│       └── pcap-parser.ts  # PCAP file parser
+│   ├── lib/
+│   │   ├── allegro.ts      # Allegro API client
+│   │   ├── gemini.ts       # Gemini AI client
+│   │   ├── db.ts           # JSON file storage
+│   │   └── pcap-parser.ts  # PCAP file parser
+│   └── data/               # Auto-created, stores JSON data files
+│       ├── devices.json
+│       ├── knowledge.json
+│       ├── chat_history.json
+│       └── settings.json
 ├── windows/
-│   ├── install-deps.bat    # Auto-install Node.js + Build Tools (run first)
-│   └── start.bat           # Launch the app
+│   └── install-deps.bat    # Windows launcher (ดับเบิลคลิกเพื่อรัน)
 └── .gitignore
 ```
 
 ---
 
-## 🪟 Windows Files
+## 🪟 Windows Setup
 
 | File | Description |
 |---|---|
-| `windows\install-deps.bat` | ติดตั้ง Node.js LTS + Visual Studio Build Tools อัตโนมัติ (รันครั้งแรกครั้งเดียว) |
-| `windows\start.bat` | รัน npm install + เริ่ม server ทุกครั้ง |
+| `windows\install-deps.bat` | เช็ค Node.js → `npm install` → เริ่ม server |
 
-**install-deps.bat ทำอะไร:**
-- ตรวจสอบว่ามี Node.js และ Build Tools ครบหรือยัง
-- ถ้าขาด → ดาวน์โหลดและติดตั้งอัตโนมัติ (ผ่าน winget หรือ direct download)
-- ถ้าครบแล้ว → แจ้งว่าพร้อมใช้งาน ออกทันที
+**ขั้นตอนครั้งแรก:**
+1. ติดตั้ง [Node.js LTS](https://nodejs.org) (ถ้ายังไม่มี)
+2. ดับเบิลคลิก `install-deps.bat` — ทำทุกอย่างให้เอง
+3. ครั้งต่อไปดับเบิลคลิกได้เลย
+
+> **ไม่ต้องติดตั้ง** Visual Studio Build Tools หรือ C++ compiler — แอปใช้ JSON files แทน SQLite
 
 ---
 
@@ -161,7 +160,7 @@ allegro-ai/
 
 ## 🔒 Security Notes
 
-- API Keys เก็บใน local SQLite database ไม่ได้ส่งออกไปที่อื่น
+- API Keys เก็บใน local JSON file ไม่ได้ส่งออกไปที่อื่น
 - รองรับ self-signed SSL certificate ต่อ device
 - Input validation บน IP address และ port ทุก endpoint
 - ไม่มี authentication layer — ออกแบบสำหรับใช้ใน LAN เท่านั้น
@@ -175,7 +174,7 @@ allegro-ai/
 | **Runtime** | Node.js v18 หรือสูงกว่า |
 | **Device** | Allegro Network Multimeter (firmware 4.x ขึ้นไป) |
 | **AI** | Google Gemini API Key (ฟรีที่ [aistudio.google.com](https://aistudio.google.com)) |
-| **Windows build** | Visual Studio Build Tools (สำหรับ better-sqlite3) — ติดตั้งอัตโนมัติด้วย `install-deps.bat` |
+| **Windows** | Node.js เท่านั้น — ไม่ต้องการ Build Tools |
 
 ---
 
