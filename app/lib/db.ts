@@ -3,10 +3,8 @@ import path from 'path';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+// Ensure data directory exists (mkdirSync with recursive is idempotent)
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -44,27 +42,22 @@ const KNOWLEDGE_FILE = path.join(DATA_DIR, 'knowledge.json');
 const CHAT_FILE = path.join(DATA_DIR, 'chat_history.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
-// ─── Simple in-memory write locks (single-threaded per worker) ────────────────
-
-const locks: Record<string, boolean> = {};
-
 function readJson<T>(filePath: string, defaultValue: T): T {
   try {
     if (!fs.existsSync(filePath)) return defaultValue;
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
+    const raw = fs.readFileSync(filePath, 'utf-8').trim();
+    if (!raw) return defaultValue;
+    return JSON.parse(raw) as T;
   } catch {
     return defaultValue;
   }
 }
 
 function writeJson<T>(filePath: string, data: T): void {
-  if (locks[filePath]) return;
-  locks[filePath] = true;
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-  } finally {
-    locks[filePath] = false;
-  }
+  // Write to a temp file then rename for atomic replacement
+  const tmp = `${filePath}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+  fs.renameSync(tmp, filePath);
 }
 
 // ─── Devices ──────────────────────────────────────────────────────────────────
@@ -93,9 +86,12 @@ export function deleteDevice(id: string): void {
   writeJson(DEVICES_FILE, devices);
 }
 
-export function setActiveDevice(id: string): void {
-  const devices = getDevices().map(d => ({ ...d, is_active: d.id === id ? 1 : 0 }));
-  writeJson(DEVICES_FILE, devices);
+export function setActiveDevice(id: string): boolean {
+  const devices = getDevices();
+  if (!devices.some(d => d.id === id)) return false;
+  const updated = devices.map(d => ({ ...d, is_active: d.id === id ? 1 : 0 }));
+  writeJson(DEVICES_FILE, updated);
+  return true;
 }
 
 export function getActiveDevice(): Device | undefined {

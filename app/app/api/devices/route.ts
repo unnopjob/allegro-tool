@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { id } = await req.json();
+  const body = await req.json();
+  const { id } = body;
+  if (!id) return NextResponse.json({ error: 'กรุณาระบุ id' }, { status: 400 });
   deleteDevice(id);
   return NextResponse.json({ success: true });
 }
