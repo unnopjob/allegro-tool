@@ -18,9 +18,11 @@
 
     <div class="space-y-4">
       <div>
-        <label class="block text-xs text-gray-400 mb-1.5">API Key</label>
+        <label class="block text-xs text-gray-400 mb-1.5">API Key
+          <span class="text-gray-600 font-normal">(ขึ้นต้นด้วย AIzaSy...)</span>
+        </label>
         <div class="relative">
-          <input id="gemini-key" type="password" placeholder="AIza…"
+          <input id="gemini-key" type="password" placeholder="AIzaSy…"
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-100 placeholder-gray-500 font-mono focus:outline-none focus:border-blue-500 transition-colors" />
           <button id="toggle-visibility"
             class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
@@ -80,7 +82,7 @@
       </div>
       <div class="flex justify-between">
         <span>AI Model</span>
-        <span class="text-gray-300">Google Gemini</span>
+        <span class="text-gray-300">Gemini 2.5 Flash</span>
       </div>
       <div class="flex justify-between">
         <span>Device</span>
@@ -135,15 +137,21 @@
 
   async function saveSettings() {
     var key = document.getElementById('gemini-key').value.trim();
+    var errEl = document.getElementById('settings-error');
     if (!key) {
-      document.getElementById('settings-error').textContent = 'Please enter an API key.';
-      document.getElementById('settings-error').classList.remove('hidden');
+      errEl.textContent = 'กรุณาใส่ API Key';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if (!key.startsWith('AIzaSy')) {
+      errEl.textContent = 'API Key ไม่ถูกรูปแบบ — ต้องขึ้นต้นด้วย AIzaSy... (รับได้ที่ aistudio.google.com)';
+      errEl.classList.remove('hidden');
+      setStatus('invalid', 'Invalid Key');
       return;
     }
 
     var btn = document.getElementById('save-btn');
     var spinner = document.getElementById('save-spinner');
-    var errEl = document.getElementById('settings-error');
     errEl.classList.add('hidden');
     btn.disabled = true;
     spinner.classList.remove('hidden');
@@ -165,7 +173,7 @@
           document.getElementById('gemini-key').placeholder = '••••••••••••••••••••••••••• (set)';
         } else {
           setStatus('invalid', 'Invalid Key');
-          errEl.textContent = data.detail || data.message || 'Key saved but test failed. Verify it is correct.';
+          errEl.textContent = data.error || data.detail || data.message || 'API Key ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
           errEl.classList.remove('hidden');
         }
       } else {
