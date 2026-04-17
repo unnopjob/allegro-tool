@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Allegro NTD{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+  <div class="flex items-center gap-3">
+    <span id="last-updated" class="text-xs text-gray-400"></span>
+    <button id="refresh-btn" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded-md transition-colors" onclick="fetchAll()">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Refresh
+    </button>
+    <span class="text-xs text-gray-500">Auto-refresh: 10s</span>
+  </div>
+</div>
+
+<!-- Error banner -->
+<div id="error-banner" class="hidden mb-4 p-3 bg-red-900/60 border border-red-700 rounded-lg text-red-300 text-sm"></div>
+
+<!-- Health Score + summary row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <!-- Health Score -->
+  <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 flex flex-col items-center justify-center">
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Health Score</p>
+    <div id="health-ring" class="relative w-20 h-20 mb-2">
+      <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#374151" stroke-width="3" />
+        <circle id="health-arc" cx="18" cy="18" r="15.9" fill="none" stroke="#3b82f6" stroke-width="3"
+          stroke-dasharray="100 100" stroke-linecap="round"
+          style="transition: stroke-dasharray 0.8s ease, stroke 0.4s;" />
+      </svg>
+      <span id="health-score-val" class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white">—</span>
+    </div>
+    <p id="health-label" class="text-sm font-medium text-gray-300">Loading…</p>
+  </div>
+
+  <!-- Total Interfaces -->
+  <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total Interfaces</p>
+    <p id="stat-total" class="text-3xl font-bold text-white mt-2">—</p>
+    <p class="text-xs text-gray-500 mt-1">Monitored ports</p>
+  </div>
+
+  <!-- UP Interfaces -->
+  <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">UP Interfaces</p>
+    <p id="stat-up" class="text-3xl font-bold text-green-400 mt-2">—</p>
+    <p class="text-xs text-gray-500 mt-1">Active links</p>
+  </div>
+
+  <!-- DOWN Interfaces -->
+  <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">DOWN Interfaces</p>
+    <p id="stat-down" class="text-3xl font-bold text-red-400 mt-2">—</p>
+    <p class="text-xs text-gray-500 mt-1">Inactive links</p>
+  </div>
+</div>
+
+<!-- Interface Cards -->
+<div class="mb-6">
+  <h2 class="text-lg font-semibold text-gray-200 mb-3">Interfaces</h2>
+  <div id="interface-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <!-- Skeleton placeholders -->
+    <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
+    <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
+    <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
+    <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
+  </div>
+</div>
+
+<!-- Top IPs Table -->
+<div class="bg-gray-800 rounded-xl border border-gray-700">
+  <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-200">Top IPs by Traffic</h2>
+    <span class="text-xs text-gray-500">Top 10 · sorted by bytes</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs text-gray-400 uppercase tracking-wider">
+          <th class="px-5 py-3">#</th>
+          <th class="px-5 py-3">IP Address</th>
+          <th class="px-5 py-3">Bytes</th>
+          <th class="px-5 py-3">Packets</th>
+          <th class="px-5 py-3">Flows</th>
+        </tr>
+      </thead>
+      <tbody id="top-ips-body" class="divide-y divide-gray-700">
+        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let refreshTimer = null;
+
+  function formatBytes(bytes) {
+    if (bytes == null || isNaN(bytes)) return '—';
+    bytes = Number(bytes);
+    if (bytes >= 1e12) return (bytes / 1e12).toFixed(2) + ' TB';
+    if (bytes >= 1e9)  return (bytes / 1e9).toFixed(2)  + ' GB';
+    if (bytes >= 1e6)  return (bytes / 1e6).toFixed(2)  + ' MB';
+    if (bytes >= 1e3)  return (bytes / 1e3).toFixed(2)  + ' KB';
+    return bytes + ' B';
+  }
+
+  function formatNumber(n) {
+    if (n == null) return '—';
+    return Number(n).toLocaleString();
+  }
+
+  function setError(msg) {
+    const el = document.getElementById('error-banner');
+    if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+    else { el.classList.add('hidden'); }
+  }
+
+  function calcHealthScore(interfaces) {
+    let score = 100;
+    interfaces.forEach(function (iface) {
+      var statusStr = (iface.operStatus || iface.status || '').toString().toUpperCase();
+      if (statusStr === 'DOWN' || statusStr === '2') score -= 10;
+      var errs = (iface.inErrors || 0) + (iface.outErrors || 0);
+      if (errs > 0) score -= 5;
+    });
+    return Math.max(0, Math.min(100, score));
+  }
+
+  function renderHealth(score) {
+    const arc = document.getElementById('health-arc');
+    const val = document.getElementById('health-score-val');
+    const lbl = document.getElementById('health-label');
+    val.textContent = score;
+    // dasharray = (score / 100) * circumference(r=15.9) ≈ 100 units scaled
+    const pct = (score / 100) * 100;
+    arc.setAttribute('stroke-dasharray', pct + ' 100');
+    if (score >= 80) { arc.setAttribute('stroke', '#22c55e'); lbl.textContent = 'Healthy'; lbl.className = 'text-sm font-medium text-green-400'; }
+    else if (score >= 50) { arc.setAttribute('stroke', '#f59e0b'); lbl.textContent = 'Degraded'; lbl.className = 'text-sm font-medium text-yellow-400'; }
+    else { arc.setAttribute('stroke', '#ef4444'); lbl.textContent = 'Critical'; lbl.className = 'text-sm font-medium text-red-400'; }
+  }
+
+  function renderInterfaces(interfaces) {
+    const grid = document.getElementById('interface-grid');
+    // Remove skeleton cards
+    grid.querySelectorAll('.skeleton-card').forEach(function (el) { el.remove(); });
+
+    if (!interfaces || interfaces.length === 0) {
+      grid.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No interfaces found.</p>';
+      return;
+    }
+
+    let up = 0, down = 0;
+
+    interfaces.forEach(function (iface) {
+      var name = iface.name || iface.ifName || iface.index || 'Interface';
+      var statusRaw = (iface.operStatus || iface.status || '').toString().toUpperCase();
+      var isUp = (statusRaw === 'UP' || statusRaw === '1');
+      if (isUp) up++; else down++;
+
+      var rxBytes = formatBytes(iface.inOctets || iface.rxBytes || iface.rx_bytes);
+      var txBytes = formatBytes(iface.outOctets || iface.txBytes || iface.tx_bytes);
+
+      var card = document.createElement('div');
+      card.className = 'bg-gray-800 rounded-xl p-4 border ' + (isUp ? 'border-gray-700' : 'border-red-800/60');
+      card.innerHTML =
+        '<div class="flex items-center justify-between mb-3">' +
+          '<span class="font-semibold text-white truncate mr-2">' + escHtml(name) + '</span>' +
+          '<span class="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-bold ' +
+            (isUp ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400') + '">' +
+            (isUp ? 'UP' : 'DOWN') +
+          '</span>' +
+        '</div>' +
+        '<div class="space-y-1 text-xs text-gray-400">' +
+          '<div class="flex justify-between"><span>RX</span><span class="text-gray-200">' + rxBytes + '</span></div>' +
+          '<div class="flex justify-between"><span>TX</span><span class="text-gray-200">' + txBytes + '</span></div>' +
+        '</div>';
+
+      // Find or append
+      var existing = grid.querySelector('[data-iface="' + name + '"]');
+      if (existing) {
+        existing.replaceWith(card);
+      } else {
+        card.setAttribute('data-iface', name);
+        grid.appendChild(card);
+      }
+      card.setAttribute('data-iface', name);
+    });
+
+    document.getElementById('stat-total').textContent = interfaces.length;
+    document.getElementById('stat-up').textContent = up;
+    document.getElementById('stat-down').textContent = down;
+  }
+
+  function renderTopIPs(data) {
+    var tbody = document.getElementById('top-ips-body');
+    var items = data.data || data.items || data.ips || data || [];
+    if (!Array.isArray(items) || items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">No IP data available.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.slice(0, 10).map(function (ip, i) {
+      var addr = ip.ip || ip.address || ip.srcIp || '—';
+      var bytes = formatBytes(ip.bytes || ip.totalBytes);
+      var pkts = formatNumber(ip.packets || ip.totalPackets);
+      var flows = formatNumber(ip.flows || ip.totalFlows);
+      return '<tr class="hover:bg-gray-700/40 transition-colors">' +
+        '<td class="px-5 py-3 text-gray-500">' + (i + 1) + '</td>' +
+        '<td class="px-5 py-3 font-mono text-blue-300">' + escHtml(addr) + '</td>' +
+        '<td class="px-5 py-3 text-gray-200">' + bytes + '</td>' +
+        '<td class="px-5 py-3 text-gray-200">' + pkts + '</td>' +
+        '<td class="px-5 py-3 text-gray-200">' + flows + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function fetchAll() {
+    setError(null);
+    try {
+      const [ifaceRes, ipRes] = await Promise.allSettled([
+        fetch('/api/allegro/API/stats/interfaces'),
+        fetch('/api/allegro/API/stats/modules/ip/ips_paged?page=0&pageSize=10&sortBy=bytes&sortOrder=desc')
+      ]);
+
+      // Interfaces
+      if (ifaceRes.status === 'fulfilled' && ifaceRes.value.ok) {
+        var ifaceData = await ifaceRes.value.json();
+        var interfaces = ifaceData.interfaces || ifaceData.data || ifaceData || [];
+        if (!Array.isArray(interfaces)) interfaces = Object.values(interfaces);
+        renderInterfaces(interfaces);
+        renderHealth(calcHealthScore(interfaces));
+      } else {
+        setError('Failed to load interface data. ' + (ifaceRes.reason || ''));
+        document.getElementById('health-score-val').textContent = '—';
+        document.getElementById('health-label').textContent = 'Unavailable';
+      }
+
+      // Top IPs
+      if (ipRes.status === 'fulfilled' && ipRes.value.ok) {
+        var ipData = await ipRes.value.json();
+        renderTopIPs(ipData);
+      } else {
+        document.getElementById('top-ips-body').innerHTML =
+          '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">IP data unavailable.</td></tr>';
+      }
+    } catch (err) {
+      setError('Network error: ' + err.message);
+    }
+
+    document.getElementById('last-updated').textContent =
+      'Updated ' + new Date().toLocaleTimeString();
+  }
+
+  fetchAll();
+  refreshTimer = setInterval(fetchAll, 10000);
+</script>
+{% endblock %}

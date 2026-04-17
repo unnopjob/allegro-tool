@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% block title %}Help — Allegro NTD{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="mb-8 text-center">
+    <h1 class="text-2xl font-bold text-white mb-2">Help & Documentation</h1>
+    <p class="text-gray-400 text-sm">Learn how to use the Allegro Network Troubleshooting Dashboard</p>
+  </div>
+
+  <!-- Search -->
+  <div class="relative mb-6">
+    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input id="help-search" type="text" placeholder="Search help topics…"
+      class="w-full bg-gray-800 border border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+      oninput="filterSections(this.value)" />
+  </div>
+
+  <!-- No results -->
+  <div id="no-results" class="hidden text-center text-gray-500 py-12 text-sm">
+    No matching topics found.
+  </div>
+
+  <!-- Accordion sections -->
+  <div id="help-sections" class="space-y-3">
+
+    <!-- Getting Started -->
+    <div class="help-section" data-keywords="getting started setup install quick start overview introduction">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">1</span>
+          <span class="font-semibold text-gray-200">Getting Started</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+          <div>
+            <h3 class="font-semibold text-white mb-1">Prerequisites</h3>
+            <p>Before using this dashboard, make sure you have:</p>
+            <ul class="mt-2 space-y-1 list-disc list-inside text-gray-400 ml-2">
+              <li>An Allegro Network Multimeter device accessible on your network</li>
+              <li>A valid Google Gemini API key (free at <a href="https://aistudio.google.com" target="_blank" class="text-blue-400 hover:underline">aistudio.google.com</a>)</li>
+              <li>The FastAPI application running on your server</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-1">Quick Start (3 steps)</h3>
+            <ol class="space-y-2 list-decimal list-inside text-gray-400 ml-2">
+              <li>Go to <strong class="text-gray-300">Settings</strong> and enter your Gemini API key, then click "Save &amp; Test".</li>
+              <li>Go to <strong class="text-gray-300">Devices</strong>, click "Add Device", fill in your Allegro device URL and credentials, then click "Activate".</li>
+              <li>Return to <strong class="text-gray-300">Dashboard</strong> to see live network metrics.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="help-section" data-keywords="dashboard interfaces health score metrics stats refresh">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">2</span>
+          <span class="font-semibold text-gray-200">Dashboard</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+          <div>
+            <h3 class="font-semibold text-white mb-1">Health Score</h3>
+            <p>The health score (0–100) is calculated automatically:</p>
+            <ul class="mt-2 space-y-1 list-disc list-inside text-gray-400 ml-2">
+              <li>Starts at 100</li>
+              <li>−10 for each DOWN interface</li>
+              <li>−5 for each interface with errors &gt; 0</li>
+            </ul>
+            <div class="mt-2 flex gap-3 text-xs">
+              <span class="text-green-400">● 80–100: Healthy</span>
+              <span class="text-yellow-400">● 50–79: Degraded</span>
+              <span class="text-red-400">● 0–49: Critical</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-1">Auto-Refresh</h3>
+            <p>Data refreshes automatically every 10 seconds. Click the "Refresh" button to refresh manually.</p>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-1">Top IPs Table</h3>
+            <p>Shows the top 10 IP addresses by total bytes transferred, sorted in descending order.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="help-section" data-keywords="analysis ai gemini overview security bandwidth tcp flow root cause analyze">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">3</span>
+          <span class="font-semibold text-gray-200">Analysis</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+          <p>The Analysis page uses Google Gemini to analyze your network data and generate insights.</p>
+          <div>
+            <h3 class="font-semibold text-white mb-2">Analysis Types</h3>
+            <div class="space-y-2">
+              <div class="flex gap-2"><span class="text-blue-400 font-medium w-24 flex-shrink-0">Overview</span><span class="text-gray-400">General health summary of your network.</span></div>
+              <div class="flex gap-2"><span class="text-blue-400 font-medium w-24 flex-shrink-0">Security</span><span class="text-gray-400">Identify potential threats, suspicious traffic, or policy violations.</span></div>
+              <div class="flex gap-2"><span class="text-blue-400 font-medium w-24 flex-shrink-0">Bandwidth</span><span class="text-gray-400">Find top consumers and bandwidth utilization trends.</span></div>
+              <div class="flex gap-2"><span class="text-blue-400 font-medium w-24 flex-shrink-0">TCP Flow</span><span class="text-gray-400">Analyze TCP connections, retransmissions, and flow quality.</span></div>
+              <div class="flex gap-2"><span class="text-blue-400 font-medium w-24 flex-shrink-0">Root Cause</span><span class="text-gray-400">Diagnose the root cause of network issues or anomalies.</span></div>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-1">Custom Questions</h3>
+            <p>Optionally add a custom question to guide the analysis (e.g. "Why is there packet loss to 10.0.0.5?").</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Path & Port Check -->
+    <div class="help-section" data-keywords="path check port ping traceroute connectivity tcp udp source destination">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">4</span>
+          <span class="font-semibold text-gray-200">Path &amp; Port Check</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+          <p>Found in the Analysis page, Path Check verifies connectivity between two hosts.</p>
+          <div>
+            <h3 class="font-semibold text-white mb-2">Results</h3>
+            <ul class="space-y-1 list-disc list-inside text-gray-400 ml-2">
+              <li><strong class="text-gray-300">Ping</strong> — Tests basic reachability and measures round-trip time.</li>
+              <li><strong class="text-gray-300">Traceroute</strong> — Shows each hop along the path with IP address and RTT.</li>
+              <li><strong class="text-gray-300">Port Status</strong> — Checks if a specific TCP/UDP port is open (shown when Port is specified).</li>
+            </ul>
+          </div>
+          <p class="text-xs text-gray-500">Source IP and Port are optional. Only Destination IP is required.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="help-section" data-keywords="chat ai assistant conversation question ask session history clear">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">5</span>
+          <span class="font-semibold text-gray-200">Chat</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-3 text-sm text-gray-300 leading-relaxed">
+          <p>Have a natural language conversation with the AI about your network. Responses are streamed in real time.</p>
+          <ul class="space-y-1 list-disc list-inside text-gray-400 ml-2">
+            <li>Press <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-xs font-mono text-gray-300">Enter</kbd> to send a message.</li>
+            <li>Press <kbd class="px-1.5 py-0.5 bg-gray-700 rounded text-xs font-mono text-gray-300">Shift+Enter</kbd> for a newline.</li>
+            <li>Click "Clear" to start a new session and erase history.</li>
+          </ul>
+          <p class="text-xs text-gray-500">Chat sessions are identified by a UUID stored in your browser's localStorage.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Knowledge Base -->
+    <div class="help-section" data-keywords="knowledge base upload file pdf txt csv json documents rag context">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold">6</span>
+          <span class="font-semibold text-gray-200">Knowledge Base</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-3 text-sm text-gray-300 leading-relaxed">
+          <p>Upload documents to provide additional context to the AI during analysis and chat.</p>
+          <div>
+            <h3 class="font-semibold text-white mb-1">Supported Formats</h3>
+            <div class="flex gap-2 flex-wrap mt-1">
+              <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">PDF</span>
+              <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">TXT</span>
+              <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">CSV</span>
+              <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">JSON</span>
+            </div>
+          </div>
+          <ul class="space-y-1 list-disc list-inside text-gray-400 ml-2">
+            <li>Maximum file size: 10 MB per file</li>
+            <li>Drag and drop or click to upload</li>
+            <li>Multiple files can be queued and uploaded together</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="help-section" data-keywords="troubleshooting error problem fix issue connection failed api key device not found">
+      <button class="accordion-btn w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 text-left hover:bg-gray-750 transition-colors group"
+        onclick="toggleAccordion(this)">
+        <div class="flex items-center gap-3">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </span>
+          <span class="font-semibold text-gray-200">Troubleshooting</span>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-gray-400 group-hover:text-gray-200 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="accordion-content hidden bg-gray-800 border border-gray-700 border-t-0 rounded-b-xl px-5 pb-5 pt-4">
+        <div class="space-y-5 text-sm text-gray-300 leading-relaxed">
+          <div>
+            <h3 class="font-semibold text-white mb-2">Dashboard shows no data</h3>
+            <ol class="space-y-1 list-decimal list-inside text-gray-400 ml-2">
+              <li>Verify a device is added and activated on the Devices page.</li>
+              <li>Check that the device URL is correct and reachable.</li>
+              <li>Use the "Test" button on the Devices page to verify connectivity.</li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-2">AI Analysis not working</h3>
+            <ol class="space-y-1 list-decimal list-inside text-gray-400 ml-2">
+              <li>Check that your Gemini API key is valid (Settings → Save &amp; Test).</li>
+              <li>Ensure your API key has quota remaining at <a href="https://aistudio.google.com" target="_blank" class="text-blue-400 hover:underline">aistudio.google.com</a>.</li>
+              <li>Verify the yellow warning banner is not shown on the Analysis page.</li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-2">SSL / Certificate errors</h3>
+            <p class="text-gray-400">If your Allegro device uses a self-signed certificate, uncheck "Verify SSL certificate" when adding the device.</p>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white mb-2">File upload fails</h3>
+            <ul class="space-y-1 list-disc list-inside text-gray-400 ml-2">
+              <li>Ensure the file is under 10 MB.</li>
+              <li>Only PDF, TXT, CSV, and JSON formats are supported.</li>
+              <li>Check browser console for detailed error messages.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function toggleAccordion(btn) {
+    var content = btn.nextElementSibling;
+    var icon = btn.querySelector('.accordion-icon');
+    var isOpen = !content.classList.contains('hidden');
+
+    if (isOpen) {
+      content.classList.add('hidden');
+      btn.classList.remove('rounded-b-none');
+      icon.style.transform = '';
+    } else {
+      content.classList.remove('hidden');
+      btn.classList.add('rounded-b-none');
+      icon.style.transform = 'rotate(180deg)';
+    }
+  }
+
+  function filterSections(query) {
+    var q = query.trim().toLowerCase();
+    var sections = document.querySelectorAll('.help-section');
+    var anyVisible = false;
+
+    sections.forEach(function (section) {
+      var keywords = section.dataset.keywords || '';
+      var title = section.querySelector('.accordion-btn span.font-semibold').textContent.toLowerCase();
+      var contentText = section.querySelector('.accordion-content').textContent.toLowerCase();
+      var matches = !q || keywords.includes(q) || title.includes(q) || contentText.includes(q);
+
+      section.style.display = matches ? '' : 'none';
+      if (matches) anyVisible = true;
+
+      // Auto-expand sections that match a search term
+      if (q && matches) {
+        var content = section.querySelector('.accordion-content');
+        var btn = section.querySelector('.accordion-btn');
+        var icon = btn.querySelector('.accordion-icon');
+        content.classList.remove('hidden');
+        btn.classList.add('rounded-b-none');
+        icon.style.transform = 'rotate(180deg)';
+      }
+    });
+
+    document.getElementById('no-results').classList.toggle('hidden', anyVisible);
+  }
+</script>
+{% endblock %}

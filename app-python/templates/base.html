@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Allegro Network Troubleshooting{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1f2937; }
+    ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+  </style>
+</head>
+<body class="h-full bg-gray-900 text-gray-100 flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="bg-gray-800 border-b border-gray-700 flex-shrink-0">
+    <div class="max-w-screen-xl mx-auto px-4">
+      <div class="flex items-center h-16">
+        <!-- Brand -->
+        <a href="/dashboard" class="flex items-center gap-2 mr-8 flex-shrink-0">
+          <svg class="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+          </svg>
+          <span class="font-bold text-white text-lg tracking-tight hidden sm:block">Allegro NTD</span>
+        </a>
+
+        <!-- Nav links (desktop) -->
+        <div class="hidden md:flex items-center gap-1 flex-1">
+          <a href="/dashboard"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Dashboard</a>
+          <a href="/analysis"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Analysis</a>
+          <a href="/chat"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Chat</a>
+          <a href="/devices"    class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Devices</a>
+          <a href="/knowledge"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Knowledge</a>
+          <a href="/settings"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Settings</a>
+          <a href="/help"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Help</a>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="md:hidden ml-auto">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile nav menu -->
+      <div id="mobile-menu" class="hidden md:hidden pb-3 space-y-1">
+        <a href="/dashboard"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Dashboard</a>
+        <a href="/analysis"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Analysis</a>
+        <a href="/chat"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Chat</a>
+        <a href="/devices"    class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Devices</a>
+        <a href="/knowledge"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Knowledge</a>
+        <a href="/settings"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Settings</a>
+        <a href="/help"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Help</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page content -->
+  <main class="flex-1 overflow-auto">
+    <div class="max-w-screen-xl mx-auto px-4 py-6">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 border-t border-gray-700 flex-shrink-0 py-3 px-4 text-center text-xs text-gray-500">
+    Allegro Network Troubleshooting Dashboard &mdash; Powered by Google Gemini AI
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // Mark active nav link
+    document.querySelectorAll('nav a.nav-link').forEach(function (a) {
+      var href = a.getAttribute('href');
+      var path = window.location.pathname;
+      if (href === path || (path === '/' && href === '/dashboard')) {
+        a.classList.add('bg-blue-600', 'text-white');
+        a.classList.remove('text-gray-300');
+      }
+    });
+  </script>
+</body>
+</html>

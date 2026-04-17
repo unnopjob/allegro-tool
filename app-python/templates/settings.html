@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Settings — Allegro NTD{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
+
+<div class="max-w-xl space-y-6">
+  <!-- Gemini API Key -->
+  <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h2 class="text-lg font-semibold text-white">Gemini API Key</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Required for AI analysis and chat features</p>
+      </div>
+      <!-- Status badge -->
+      <span id="api-status" class="hidden px-2.5 py-1 rounded-full text-xs font-bold"></span>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs text-gray-400 mb-1.5">API Key</label>
+        <div class="relative">
+          <input id="gemini-key" type="password" placeholder="AIza…"
+            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-100 placeholder-gray-500 font-mono focus:outline-none focus:border-blue-500 transition-colors" />
+          <button id="toggle-visibility"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+            onclick="toggleKeyVisibility()" type="button" aria-label="Toggle visibility">
+            <svg id="eye-icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <svg id="eye-off-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div id="settings-error" class="hidden p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-xs"></div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3">
+        <button id="save-btn" onclick="saveSettings()"
+          class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors">
+          <svg id="save-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Save &amp; Test
+        </button>
+        <button onclick="clearKey()"
+          class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-semibold rounded-lg transition-colors">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-5 pt-4 border-t border-gray-700">
+      <p class="text-xs text-gray-500">
+        Don't have a Gemini API key?
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener"
+          class="text-blue-400 hover:text-blue-300 underline underline-offset-2">
+          Get one free at Google AI Studio
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Info card -->
+  <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+    <h3 class="text-sm font-semibold text-gray-300 mb-3">About</h3>
+    <div class="space-y-2 text-xs text-gray-400">
+      <div class="flex justify-between">
+        <span>Application</span>
+        <span class="text-gray-300">Allegro Network Troubleshooting Dashboard</span>
+      </div>
+      <div class="flex justify-between">
+        <span>AI Model</span>
+        <span class="text-gray-300">Google Gemini</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Device</span>
+        <span class="text-gray-300">Allegro Network Multimeter</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  var keyVisible = false;
+
+  function toggleKeyVisibility() {
+    var input = document.getElementById('gemini-key');
+    keyVisible = !keyVisible;
+    input.type = keyVisible ? 'text' : 'password';
+    document.getElementById('eye-icon').classList.toggle('hidden', keyVisible);
+    document.getElementById('eye-off-icon').classList.toggle('hidden', !keyVisible);
+  }
+
+  function setStatus(state, msg) {
+    var badge = document.getElementById('api-status');
+    badge.classList.remove('hidden');
+    if (state === 'valid') {
+      badge.textContent = msg || 'Valid';
+      badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-green-900/60 text-green-400 border border-green-700';
+    } else if (state === 'invalid') {
+      badge.textContent = msg || 'Invalid';
+      badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-red-900/60 text-red-400 border border-red-700';
+    } else {
+      badge.textContent = msg || 'Not Set';
+      badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-400 border border-gray-600';
+    }
+  }
+
+  async function loadCurrentSettings() {
+    try {
+      var res = await fetch('/api/settings');
+      if (!res.ok) return;
+      var data = await res.json();
+      if (data.has_key || data.gemini_api_key) {
+        // Show masked key placeholder
+        document.getElementById('gemini-key').placeholder = '••••••••••••••••••••••••••• (set)';
+        setStatus('valid', 'Key Set');
+      } else {
+        setStatus('none', 'Not Set');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  async function saveSettings() {
+    var key = document.getElementById('gemini-key').value.trim();
+    if (!key) {
+      document.getElementById('settings-error').textContent = 'Please enter an API key.';
+      document.getElementById('settings-error').classList.remove('hidden');
+      return;
+    }
+
+    var btn = document.getElementById('save-btn');
+    var spinner = document.getElementById('save-spinner');
+    var errEl = document.getElementById('settings-error');
+    errEl.classList.add('hidden');
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+
+    try {
+      var res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gemini_api_key: key, test: true })
+      });
+
+      var data = await res.json().catch(function () { return {}; });
+
+      if (res.ok) {
+        var valid = data.valid !== false && data.success !== false;
+        if (valid) {
+          setStatus('valid', 'Valid');
+          document.getElementById('gemini-key').value = '';
+          document.getElementById('gemini-key').placeholder = '••••••••••••••••••••••••••• (set)';
+        } else {
+          setStatus('invalid', 'Invalid Key');
+          errEl.textContent = data.detail || data.message || 'Key saved but test failed. Verify it is correct.';
+          errEl.classList.remove('hidden');
+        }
+      } else {
+        setStatus('invalid', 'Error');
+        errEl.textContent = data.detail || 'Failed to save settings.';
+        errEl.classList.remove('hidden');
+      }
+    } catch (err) {
+      setStatus('invalid', 'Error');
+      errEl.textContent = 'Network error: ' + err.message;
+      errEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.add('hidden');
+    }
+  }
+
+  async function clearKey() {
+    if (!confirm('Remove the saved API key?')) return;
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gemini_api_key: '' })
+      });
+      document.getElementById('gemini-key').value = '';
+      document.getElementById('gemini-key').placeholder = 'AIza…';
+      setStatus('none', 'Not Set');
+    } catch (err) {
+      document.getElementById('settings-error').textContent = err.message;
+      document.getElementById('settings-error').classList.remove('hidden');
+    }
+  }
+
+  loadCurrentSettings();
+</script>
+{% endblock %}

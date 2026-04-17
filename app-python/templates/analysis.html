@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block title %}Analysis — Allegro NTD{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-white mb-6">Network Analysis</h1>
+
+<!-- Warning Banner (no device / no API key) -->
+<div id="warning-banner" class="hidden mb-5 p-4 bg-yellow-900/50 border border-yellow-700 rounded-lg flex items-start gap-3">
+  <svg class="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+  </svg>
+  <p id="warning-text" class="text-yellow-300 text-sm"></p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Left: Analysis Config -->
+  <div class="lg:col-span-1 space-y-5">
+    <!-- Analysis Type -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+      <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Analysis Type</h2>
+      <div class="space-y-2" id="analysis-type-buttons">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300 text-sm font-medium transition-all" data-type="overview">
+          Overview
+        </button>
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="security">
+          Security
+        </button>
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="bandwidth">
+          Bandwidth
+        </button>
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="tcp_flow">
+          TCP Flow
+        </button>
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="root_cause">
+          Root Cause
+        </button>
+      </div>
+    </div>
+
+    <!-- Optional Question -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+      <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Custom Question <span class="text-gray-500 font-normal normal-case">(optional)</span></h2>
+      <textarea id="analysis-question" rows="4"
+        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+        placeholder="e.g. Why is there high latency between 10.0.0.1 and 10.0.0.2?"></textarea>
+    </div>
+
+    <button id="analyze-btn"
+      class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+      onclick="runAnalysis()">
+      <svg id="analyze-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      Run Analysis
+    </button>
+  </div>
+
+  <!-- Right: Result -->
+  <div class="lg:col-span-2 space-y-5">
+    <!-- Analysis Result -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 min-h-48">
+      <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider">Analysis Result</h2>
+        <button id="copy-result-btn" class="hidden text-xs text-gray-400 hover:text-gray-200 transition-colors" onclick="copyResult()">Copy</button>
+      </div>
+      <div id="analysis-result" class="px-5 py-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap min-h-32">
+        <span class="text-gray-500">Select an analysis type and click "Run Analysis".</span>
+      </div>
+    </div>
+
+    <!-- Path & Port Check -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700">
+      <div class="px-5 py-4 border-b border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-200">Path & Port Check</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Verify connectivity between hosts</p>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Source IP <span class="text-gray-600">(optional)</span></label>
+            <input id="src-ip" type="text" placeholder="192.168.1.1"
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Destination IP <span class="text-red-400">*</span></label>
+            <input id="dst-ip" type="text" placeholder="8.8.8.8"
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Port <span class="text-gray-600">(optional)</span></label>
+            <input id="port" type="number" placeholder="80"
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Protocol</label>
+            <select id="protocol"
+              class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+            </select>
+          </div>
+        </div>
+        <button id="pathcheck-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2" onclick="runPathCheck()">
+          <svg id="path-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Check Path
+        </button>
+
+        <!-- Path Check Results -->
+        <div id="pathcheck-results" class="hidden space-y-4 mt-2">
+          <!-- Ping card -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ping</h3>
+            <div id="ping-result" class="text-sm text-gray-300"></div>
+          </div>
+          <!-- Traceroute -->
+          <div class="bg-gray-700/50 rounded-lg p-4">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Traceroute</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-xs text-gray-500">
+                    <th class="pb-2 pr-4">Hop</th>
+                    <th class="pb-2 pr-4">IP</th>
+                    <th class="pb-2">RTT</th>
+                  </tr>
+                </thead>
+                <tbody id="traceroute-body" class="divide-y divide-gray-600/50"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Port Status -->
+          <div id="port-status-card" class="hidden bg-gray-700/50 rounded-lg p-4">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Port Status</h3>
+            <div id="port-result" class="text-sm text-gray-300"></div>
+          </div>
+        </div>
+        <div id="pathcheck-error" class="hidden text-sm text-red-400 mt-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  var selectedType = 'overview';
+
+  // Type button selection
+  document.querySelectorAll('.analysis-type-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectedType = this.dataset.type;
+      document.querySelectorAll('.analysis-type-btn').forEach(function (b) {
+        b.classList.remove('border-blue-500', 'bg-blue-600/20', 'text-blue-300');
+        b.classList.add('border-gray-600', 'text-gray-300');
+      });
+      this.classList.add('border-blue-500', 'bg-blue-600/20', 'text-blue-300');
+      this.classList.remove('border-gray-600', 'text-gray-300');
+    });
+  });
+
+  // Check settings/devices on load
+  async function checkWarnings() {
+    try {
+      const [settingsRes, devicesRes] = await Promise.all([
+        fetch('/api/settings'),
+        fetch('/api/devices')
+      ]);
+      var warnings = [];
+      if (settingsRes.ok) {
+        var s = await settingsRes.json();
+        if (!s.has_key && !s.gemini_api_key) warnings.push('No Gemini API key configured. Go to Settings to add one.');
+      }
+      if (devicesRes.ok) {
+        var d = await devicesRes.json();
+        var devices = d.devices || d || [];
+        var hasActive = Array.isArray(devices) && devices.some(function (dev) { return dev.active || dev.is_active; });
+        if (!hasActive) warnings.push('No active device selected. Go to Devices to activate one.');
+      }
+      if (warnings.length > 0) {
+        document.getElementById('warning-text').textContent = warnings.join(' ');
+        document.getElementById('warning-banner').classList.remove('hidden');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  checkWarnings();
+
+  async function runAnalysis() {
+    var btn = document.getElementById('analyze-btn');
+    var spinner = document.getElementById('analyze-spinner');
+    var resultEl = document.getElementById('analysis-result');
+    var question = document.getElementById('analysis-question').value.trim();
+
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+    resultEl.textContent = '';
+    document.getElementById('copy-result-btn').classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: selectedType, question: question || undefined })
+      });
+
+      if (!res.ok) {
+        var err = await res.json().catch(function () { return {}; });
+        resultEl.textContent = 'Error: ' + (err.detail || res.statusText);
+        return;
+      }
+
+      // Handle SSE stream
+      if (res.headers.get('content-type') && res.headers.get('content-type').includes('text/event-stream')) {
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = '';
+        while (true) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          buffer += decoder.decode(chunk.value, { stream: true });
+          var lines = buffer.split('\n');
+          buffer = lines.pop();
+          lines.forEach(function (line) {
+            if (line.startsWith('data: ')) {
+              var data = line.slice(6);
+              if (data === '[DONE]') return;
+              try { var parsed = JSON.parse(data); resultEl.textContent += parsed.text || parsed.content || ''; }
+              catch (e) { resultEl.textContent += data; }
+            }
+          });
+        }
+      } else {
+        var json = await res.json();
+        resultEl.textContent = json.result || json.content || JSON.stringify(json, null, 2);
+      }
+      document.getElementById('copy-result-btn').classList.remove('hidden');
+    } catch (err) {
+      resultEl.textContent = 'Error: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      spinner.classList.add('hidden');
+    }
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(document.getElementById('analysis-result').textContent).then(function () {
+      var btn = document.getElementById('copy-result-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  async function runPathCheck() {
+    var dst = document.getElementById('dst-ip').value.trim();
+    if (!dst) { alert('Destination IP is required.'); return; }
+
+    var btn = document.getElementById('pathcheck-btn');
+    var spinner = document.getElementById('path-spinner');
+    var errEl = document.getElementById('pathcheck-error');
+    var results = document.getElementById('pathcheck-results');
+
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+    errEl.classList.add('hidden');
+    results.classList.add('hidden');
+
+    var payload = {
+      destination: dst,
+      protocol: document.getElementById('protocol').value
+    };
+    var src = document.getElementById('src-ip').value.trim();
+    var port = document.getElementById('port').value.trim();
+    if (src) payload.source = src;
+    if (port) payload.port = parseInt(port, 10);
+
+    try {
+      var res = await fetch('/api/tools/pathcheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        var e = await res.json().catch(function () { return {}; });
+        errEl.textContent = 'Error: ' + (e.detail || res.statusText);
+        errEl.classList.remove('hidden');
+        return;
+      }
+      var data = await res.json();
+
+      // Ping
+      var pingEl = document.getElementById('ping-result');
+      var ping = data.ping || {};
+      var reachable = ping.reachable || ping.success || false;
+      pingEl.innerHTML =
+        '<span class="inline-flex items-center gap-1.5">' +
+        '<span class="w-2 h-2 rounded-full ' + (reachable ? 'bg-green-400' : 'bg-red-400') + '"></span>' +
+        '<span class="' + (reachable ? 'text-green-400' : 'text-red-400') + ' font-semibold">' +
+          (reachable ? 'Reachable' : 'Unreachable') +
+        '</span>' +
+        (ping.avg_rtt ? '<span class="text-gray-400 ml-2">avg RTT: ' + ping.avg_rtt + ' ms</span>' : '') +
+        '</span>';
+
+      // Traceroute
+      var hops = data.traceroute || data.hops || [];
+      var tbody = document.getElementById('traceroute-body');
+      if (hops.length > 0) {
+        tbody.innerHTML = hops.map(function (hop, i) {
+          return '<tr class="text-gray-300">' +
+            '<td class="py-1.5 pr-4 text-gray-500">' + (hop.hop || i + 1) + '</td>' +
+            '<td class="py-1.5 pr-4 font-mono">' + escHtml(hop.ip || hop.address || '*') + '</td>' +
+            '<td class="py-1.5">' + (hop.rtt != null ? hop.rtt + ' ms' : '*') + '</td>' +
+          '</tr>';
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3" class="py-2 text-gray-500 text-xs">No traceroute data available.</td></tr>';
+      }
+
+      // Port status
+      if (data.port_status !== undefined || port) {
+        var portCard = document.getElementById('port-status-card');
+        var portEl = document.getElementById('port-result');
+        var open = data.port_status || data.port_open || false;
+        portEl.innerHTML =
+          '<span class="inline-flex items-center gap-1.5">' +
+          '<span class="w-2 h-2 rounded-full ' + (open ? 'bg-green-400' : 'bg-red-400') + '"></span>' +
+          '<span class="' + (open ? 'text-green-400' : 'text-red-400') + ' font-semibold">' +
+            (open ? 'Open' : 'Closed / Filtered') +
+          '</span>' +
+          (port ? '<span class="text-gray-400 ml-2">Port ' + port + ' / ' + payload.protocol.toUpperCase() + '</span>' : '') +
+          '</span>';
+        portCard.classList.remove('hidden');
+      }
+
+      results.classList.remove('hidden');
+    } catch (err) {
+      errEl.textContent = 'Error: ' + err.message;
+      errEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.add('hidden');
+    }
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+{% endblock %}
