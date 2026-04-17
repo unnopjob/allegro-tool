@@ -18,9 +18,7 @@
 
     <div class="space-y-4">
       <div>
-        <label class="block text-xs text-gray-400 mb-1.5">API Key
-          <span class="text-gray-600 font-normal">(ขึ้นต้นด้วย AIzaSy...)</span>
-        </label>
+        <label class="block text-xs text-gray-400 mb-1.5">API Key</label>
         <div class="relative">
           <input id="gemini-key" type="password" placeholder="AIzaSy…"
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-100 placeholder-gray-500 font-mono focus:outline-none focus:border-blue-500 transition-colors" />
@@ -143,8 +141,8 @@
       errEl.classList.remove('hidden');
       return;
     }
-    if (!key.startsWith('AIzaSy')) {
-      errEl.textContent = 'API Key ไม่ถูกรูปแบบ — ต้องขึ้นต้นด้วย AIzaSy... (รับได้ที่ aistudio.google.com)';
+    if (key.length < 20) {
+      errEl.textContent = 'API Key สั้นเกินไป กรุณาตรวจสอบอีกครั้ง';
       errEl.classList.remove('hidden');
       setStatus('invalid', 'Invalid Key');
       return;

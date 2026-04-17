@@ -3,7 +3,7 @@ from google import genai
 from google.genai import types
 from lib.db import get_setting
 
-MODEL = "gemini-2.5-flash-preview-04-17"
+MODEL = "gemini-2.5-flash"
 
 
 def _client() -> genai.Client:
