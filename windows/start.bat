@@ -34,7 +34,7 @@ for /f "tokens=*" %%v in ('%PYTHON% --version') do set PY_VER=%%v
 echo [ OK ] %PY_VER%
 
 :: ── Go to app folder ─────────────────────────────
-cd /d "%~dp0..\app"
+cd /d "%~dp0..\app-python"
 
 :: ── Create virtualenv if not exists ──────────────
 echo [2/4] Checking virtual environment...

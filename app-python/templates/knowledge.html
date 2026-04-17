@@ -248,11 +248,11 @@
       return;
     }
     listEl.innerHTML = files.map(function (f) {
-      var name = f.filename || f.name || 'Unknown';
+      var name = f.original_name || f.filename || f.name || 'Unknown';
       var size = f.size ? formatSize(f.size) : '—';
       var date = f.uploaded_at || f.created_at || '';
       var ext = name.split('.').pop().toUpperCase();
-      var id = f.id || f.filename || name;
+      var id = f.id;
       return '<div class="flex items-center justify-between px-5 py-3 hover:bg-gray-700/30 transition-colors">' +
         '<div class="flex items-center gap-3 min-w-0">' +
           '<span class="flex-shrink-0 px-1.5 py-0.5 text-xs font-bold rounded bg-gray-700 text-gray-300">' + escHtml(ext) + '</span>' +

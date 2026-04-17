@@ -29,10 +29,10 @@
         <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="bandwidth">
           Bandwidth
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="tcp_flow">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="tcp">
           TCP Flow
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="root_cause">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="rootcause">
           Root Cause
         </button>
       </div>
@@ -270,13 +270,13 @@
     results.classList.add('hidden');
 
     var payload = {
-      destination: dst,
+      dst_ip: dst,
       protocol: document.getElementById('protocol').value
     };
     var src = document.getElementById('src-ip').value.trim();
     var port = document.getElementById('port').value.trim();
-    if (src) payload.source = src;
-    if (port) payload.port = parseInt(port, 10);
+    if (src) payload.src_ip = src;
+    if (port) payload.dst_port = parseInt(port, 10);
 
     try {
       var res = await fetch('/api/tools/pathcheck', {
@@ -295,14 +295,14 @@
       // Ping
       var pingEl = document.getElementById('ping-result');
       var ping = data.ping || {};
-      var reachable = ping.reachable || ping.success || false;
+      var reachable = ping.success || false;
       pingEl.innerHTML =
         '<span class="inline-flex items-center gap-1.5">' +
         '<span class="w-2 h-2 rounded-full ' + (reachable ? 'bg-green-400' : 'bg-red-400') + '"></span>' +
         '<span class="' + (reachable ? 'text-green-400' : 'text-red-400') + ' font-semibold">' +
           (reachable ? 'Reachable' : 'Unreachable') +
         '</span>' +
-        (ping.avg_rtt ? '<span class="text-gray-400 ml-2">avg RTT: ' + ping.avg_rtt + ' ms</span>' : '') +
+        (ping.rtt_ms != null ? '<span class="text-gray-400 ml-2">avg RTT: ' + ping.rtt_ms + ' ms</span>' : '') +
         '</span>';
 
       // Traceroute
@@ -313,7 +313,7 @@
           return '<tr class="text-gray-300">' +
             '<td class="py-1.5 pr-4 text-gray-500">' + (hop.hop || i + 1) + '</td>' +
             '<td class="py-1.5 pr-4 font-mono">' + escHtml(hop.ip || hop.address || '*') + '</td>' +
-            '<td class="py-1.5">' + (hop.rtt != null ? hop.rtt + ' ms' : '*') + '</td>' +
+            '<td class="py-1.5">' + (hop.rtt_ms != null ? hop.rtt_ms + ' ms' : '*') + '</td>' +
           '</tr>';
         }).join('');
       } else {
@@ -321,10 +321,11 @@
       }
 
       // Port status
-      if (data.port_status !== undefined || port) {
+      if (data.port_check !== undefined || port) {
         var portCard = document.getElementById('port-status-card');
         var portEl = document.getElementById('port-result');
-        var open = data.port_status || data.port_open || false;
+        var portCheck = data.port_check || {};
+        var open = portCheck.open || false;
         portEl.innerHTML =
           '<span class="inline-flex items-center gap-1.5">' +
           '<span class="w-2 h-2 rounded-full ' + (open ? 'bg-green-400' : 'bg-red-400') + '"></span>' +
@@ -332,6 +333,7 @@
             (open ? 'Open' : 'Closed / Filtered') +
           '</span>' +
           (port ? '<span class="text-gray-400 ml-2">Port ' + port + ' / ' + payload.protocol.toUpperCase() + '</span>' : '') +
+          (portCheck.latency_ms != null ? '<span class="text-gray-400 ml-2">latency: ' + portCheck.latency_ms + ' ms</span>' : '') +
           '</span>';
         portCard.classList.remove('hidden');
       }

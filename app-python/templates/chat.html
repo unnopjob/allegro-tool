@@ -190,6 +190,7 @@
 
   async function clearHistory() {
     if (!confirm('Clear all chat history?')) return;
+    var oldSessionId = sessionId;
     sessionId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       var r = Math.random() * 16 | 0;
       return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
@@ -197,8 +198,7 @@
     localStorage.setItem(SESSION_KEY, sessionId);
 
     try {
-      await fetch('/api/chat', { method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId }) });
+      await fetch('/api/chat/history/' + encodeURIComponent(oldSessionId), { method: 'DELETE' });
     } catch (e) { /* ignore */ }
 
     var container = document.getElementById('chat-messages');

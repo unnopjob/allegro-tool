@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 import httpx
 from lib.db import get_devices, add_device, update_device, delete_device, set_active_device, new_uuid
 
@@ -14,6 +14,14 @@ class DeviceIn(BaseModel):
     username: str
     password: str
     verify_ssl: int = 0
+
+    @field_validator("verify_ssl", mode="before")
+    @classmethod
+    def coerce_verify_ssl(cls, v):
+        # Accept boolean from frontend (true/false) and store as int (1/0)
+        if isinstance(v, bool):
+            return int(v)
+        return int(v)
 
 
 @router.get("")
@@ -35,6 +43,22 @@ def create_device(body: DeviceIn):
     }
     add_device(device)
     return device
+
+
+@router.put("/{device_id}")
+def update_device_handler(device_id: str, body: DeviceIn):
+    devices = get_devices()
+    if not any(d["id"] == device_id for d in devices):
+        raise HTTPException(404, "ไม่พบ device")
+    updates = {
+        "name": body.name,
+        "url": body.url.rstrip("/"),
+        "username": body.username,
+        "password": body.password,
+        "verify_ssl": body.verify_ssl,
+    }
+    update_device(device_id, updates)
+    return {"success": True}
 
 
 @router.delete("/{device_id}")
