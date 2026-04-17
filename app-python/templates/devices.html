@@ -43,9 +43,12 @@
           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
       </div>
       <div>
-        <label class="block text-xs text-gray-400 mb-1">URL <span class="text-red-400">*</span></label>
-        <input id="d-url" type="url" required placeholder="https://192.168.1.1"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
+        <label class="block text-xs text-gray-400 mb-1">IP Address <span class="text-red-400">*</span></label>
+        <div class="flex">
+          <span class="inline-flex items-center px-3 bg-gray-600 border border-r-0 border-gray-600 rounded-l-lg text-gray-400 text-sm select-none">https://</span>
+          <input id="d-ip" type="text" required placeholder="192.168.1.100"
+            class="flex-1 bg-gray-700 border border-gray-600 rounded-r-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -153,7 +156,7 @@
     resultEl.classList.remove('hidden');
     bodyEl.textContent = 'Testing connection…';
     try {
-      var res = await fetch('/api/devices/' + encodeURIComponent(id) + '/test', { method: 'POST' });
+      var res = await fetch('/api/devices/' + encodeURIComponent(id) + '/test', { method: 'GET' });
       var data = await res.json();
       if (res.ok && (data.success || data.ok || data.status === 'ok')) {
         bodyEl.innerHTML = '<span class="text-green-400 font-semibold">Connected successfully.</span>' +
@@ -169,7 +172,7 @@
   }
 
   async function deleteDevice(id) {
-    if (!confirm('Delete this device?')) return;
+    if (!confirm('ลบ device นี้?')) return;
     try {
       var res = await fetch('/api/devices/' + encodeURIComponent(id), { method: 'DELETE' });
       if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
@@ -189,7 +192,9 @@
     if (_editingData && _editingData[id]) {
       var dev = _editingData[id];
       document.getElementById('d-name').value = dev.name || '';
-      document.getElementById('d-url').value = dev.url || '';
+      // Strip https:// prefix for IP field
+      var ipVal = (dev.url || '').replace(/^https?:\/\//, '');
+      document.getElementById('d-ip').value = ipVal;
       document.getElementById('d-username').value = dev.username || '';
       document.getElementById('d-verify-ssl').checked = dev.verify_ssl !== false;
     }
@@ -213,9 +218,11 @@
     errEl.classList.add('hidden');
 
     var id = document.getElementById('device-id').value;
+    var ip = document.getElementById('d-ip').value.trim();
+    var url = ip.startsWith('http://') || ip.startsWith('https://') ? ip : 'https://' + ip;
     var payload = {
       name: document.getElementById('d-name').value.trim(),
-      url: document.getElementById('d-url').value.trim(),
+      url: url,
       username: document.getElementById('d-username').value.trim(),
       password: document.getElementById('d-password').value,
       verify_ssl: document.getElementById('d-verify-ssl').checked

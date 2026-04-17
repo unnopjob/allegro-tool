@@ -37,9 +37,8 @@ def create_device(body: DeviceIn):
     return device
 
 
-@router.delete("")
-def remove_device(body: dict):
-    device_id = body.get("id")
+@router.delete("/{device_id}")
+def remove_device(device_id: str):
     if not device_id:
         raise HTTPException(400, "กรุณาระบุ id")
     delete_device(device_id)
