@@ -4,7 +4,7 @@
 {% block content %}
 <div class="max-w-3xl mx-auto">
   <div class="mb-8 text-center">
-    <h1 class="text-2xl font-bold text-white mb-2">Help & Documentation</h1>
+    <h1 class="text-2xl font-bold text-white mb-2" data-i18n="help.title">Help & Documentation</h1>
     <p class="text-gray-400 text-sm">Learn how to use the Allegro Network Troubleshooting Dashboard</p>
   </div>
 
@@ -13,7 +13,9 @@
     <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
-    <input id="help-search" type="text" placeholder="Search help topics…"
+    <input id="help-search" type="text"
+      data-i18n="help.search" data-i18n-attr="placeholder"
+      placeholder="Search help topics…"
       class="w-full bg-gray-800 border border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
       oninput="filterSections(this.value)" />
   </div>

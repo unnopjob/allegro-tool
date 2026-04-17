@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+  <h1 class="text-2xl font-bold text-white" data-i18n="dash.title">Dashboard</h1>
   <div class="flex items-center gap-3">
     <span id="last-updated" class="text-xs text-gray-400"></span>
     <button id="refresh-btn" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm text-gray-200 rounded-md transition-colors" onclick="fetchAll()">
@@ -12,7 +12,7 @@
       </svg>
       Refresh
     </button>
-    <span class="text-xs text-gray-500">Auto-refresh: 10s</span>
+    <span class="text-xs text-gray-500" data-i18n="dash.refresh">Auto-refresh: 10s</span>
   </div>
 </div>
 
@@ -23,7 +23,7 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   <!-- Health Score -->
   <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 flex flex-col items-center justify-center">
-    <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Health Score</p>
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-2" data-i18n="dash.health">Health Score</p>
     <div id="health-ring" class="relative w-20 h-20 mb-2">
       <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
         <circle cx="18" cy="18" r="15.9" fill="none" stroke="#374151" stroke-width="3" />
@@ -33,12 +33,12 @@
       </svg>
       <span id="health-score-val" class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white">—</span>
     </div>
-    <p id="health-label" class="text-sm font-medium text-gray-300">Loading…</p>
+    <p id="health-label" class="text-sm font-medium text-gray-300" data-i18n="dash.loading">Loading…</p>
   </div>
 
   <!-- Total Interfaces -->
   <div class="bg-gray-800 rounded-xl p-5 border border-gray-700">
-    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total Interfaces</p>
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1" data-i18n="dash.interfaces">Total Interfaces</p>
     <p id="stat-total" class="text-3xl font-bold text-white mt-2">—</p>
     <p class="text-xs text-gray-500 mt-1">Monitored ports</p>
   </div>
@@ -60,7 +60,7 @@
 
 <!-- Interface Cards -->
 <div class="mb-6">
-  <h2 class="text-lg font-semibold text-gray-200 mb-3">Interfaces</h2>
+  <h2 class="text-lg font-semibold text-gray-200 mb-3" data-i18n="dash.interfaces">Interfaces</h2>
   <div id="interface-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
     <!-- Skeleton placeholders -->
     <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
@@ -73,7 +73,7 @@
 <!-- Top IPs Table -->
 <div class="bg-gray-800 rounded-xl border border-gray-700">
   <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-gray-200">Top IPs by Traffic</h2>
+    <h2 class="text-lg font-semibold text-gray-200" data-i18n="dash.top_ips">Top IPs by Traffic</h2>
     <span class="text-xs text-gray-500">Top 10 · sorted by bytes</span>
   </div>
   <div class="overflow-x-auto">
@@ -88,7 +88,7 @@
         </tr>
       </thead>
       <tbody id="top-ips-body" class="divide-y divide-gray-700">
-        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">Loading…</td></tr>
+        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500" data-i18n="dash.loading">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -150,7 +150,7 @@
     grid.querySelectorAll('.skeleton-card').forEach(function (el) { el.remove(); });
 
     if (!interfaces || interfaces.length === 0) {
-      grid.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No interfaces found.</p>';
+      grid.innerHTML = '<p class="text-gray-500 text-sm col-span-full">' + t('dash.no_device') + '</p>';
       return;
     }
 
@@ -176,8 +176,8 @@
           '</span>' +
         '</div>' +
         '<div class="space-y-1 text-xs text-gray-400">' +
-          '<div class="flex justify-between"><span>RX</span><span class="text-gray-200">' + rxBytes + '</span></div>' +
-          '<div class="flex justify-between"><span>TX</span><span class="text-gray-200">' + txBytes + '</span></div>' +
+          '<div class="flex justify-between"><span>' + t('dash.rx') + '</span><span class="text-gray-200">' + rxBytes + '</span></div>' +
+          '<div class="flex justify-between"><span>' + t('dash.tx') + '</span><span class="text-gray-200">' + txBytes + '</span></div>' +
         '</div>';
 
       // Find or append

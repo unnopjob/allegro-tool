@@ -3,13 +3,13 @@
 
 {% block content %}
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold text-white">Devices</h1>
+  <h1 class="text-2xl font-bold text-white" data-i18n="devices.title">Devices</h1>
   <button onclick="openAddModal()"
     class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
     </svg>
-    Add Device
+    <span data-i18n="devices.add">Add Device</span>
   </button>
 </div>
 
@@ -18,14 +18,14 @@
 
 <!-- Devices list -->
 <div id="devices-container" class="space-y-3">
-  <div class="text-gray-500 text-sm animate-pulse">Loading devices…</div>
+  <div class="text-gray-500 text-sm animate-pulse" data-i18n="common.loading">Loading devices…</div>
 </div>
 
 <!-- Test result inline -->
 <div id="test-result" class="hidden mt-4 p-4 bg-gray-800 border border-gray-700 rounded-xl">
   <div class="flex items-center justify-between mb-2">
-    <h3 class="text-sm font-semibold text-gray-300">Connection Test Result</h3>
-    <button onclick="document.getElementById('test-result').classList.add('hidden')" class="text-gray-500 hover:text-gray-300 text-xs">Dismiss</button>
+    <h3 class="text-sm font-semibold text-gray-300" data-i18n="devices.test_result">Connection Test Result</h3>
+    <button onclick="document.getElementById('test-result').classList.add('hidden')" class="text-gray-500 hover:text-gray-300 text-xs" data-i18n="devices.dismiss">Dismiss</button>
   </div>
   <div id="test-result-body" class="text-sm text-gray-300"></div>
 </div>
@@ -34,16 +34,16 @@
 <div id="device-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-black/70" onclick="closeModal()"></div>
   <div class="relative bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-    <h2 class="text-lg font-bold text-white mb-5" id="modal-title">Add Device</h2>
+    <h2 class="text-lg font-bold text-white mb-5" id="modal-title" data-i18n="devices.modal_add">Add Device</h2>
     <form id="device-form" onsubmit="submitDevice(event)" class="space-y-4">
       <input type="hidden" id="device-id" />
       <div>
-        <label class="block text-xs text-gray-400 mb-1">Device Name <span class="text-red-400">*</span></label>
+        <label class="block text-xs text-gray-400 mb-1"><span data-i18n="devices.name">Device Name</span> <span class="text-red-400">*</span></label>
         <input id="d-name" type="text" required placeholder="Production Router"
           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
       </div>
       <div>
-        <label class="block text-xs text-gray-400 mb-1">IP Address <span class="text-red-400">*</span></label>
+        <label class="block text-xs text-gray-400 mb-1"><span data-i18n="devices.ip">IP Address</span> <span class="text-red-400">*</span></label>
         <div class="flex">
           <span class="inline-flex items-center px-3 bg-gray-600 border border-r-0 border-gray-600 rounded-l-lg text-gray-400 text-sm select-none">https://</span>
           <input id="d-ip" type="text" required placeholder="192.168.1.100"
@@ -52,12 +52,12 @@
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Username</label>
+          <label class="block text-xs text-gray-400 mb-1" data-i18n="devices.username">Username</label>
           <input id="d-username" type="text" placeholder="admin"
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Password</label>
+          <label class="block text-xs text-gray-400 mb-1" data-i18n="devices.password">Password</label>
           <input id="d-password" type="password" placeholder="••••••••"
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
         </div>
@@ -65,16 +65,16 @@
       <div class="flex items-center gap-2">
         <input id="d-verify-ssl" type="checkbox" checked
           class="w-4 h-4 rounded bg-gray-700 border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer" />
-        <label for="d-verify-ssl" class="text-sm text-gray-300 cursor-pointer">Verify SSL certificate</label>
+        <label for="d-verify-ssl" class="text-sm text-gray-300 cursor-pointer" data-i18n="devices.verify_ssl">Verify SSL certificate</label>
       </div>
       <div id="modal-error" class="hidden p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-xs"></div>
       <div class="flex gap-3 pt-2">
         <button type="submit"
-          class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">
+          class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors" data-i18n="devices.save">
           Save Device
         </button>
         <button type="button" onclick="closeModal()"
-          class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-semibold rounded-lg transition-colors">
+          class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-semibold rounded-lg transition-colors" data-i18n="devices.cancel">
           Cancel
         </button>
       </div>
@@ -113,29 +113,28 @@
   function renderDevices(devices) {
     var container = document.getElementById('devices-container');
     if (!devices.length) {
-      container.innerHTML = '<div class="text-gray-500 text-sm bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">No devices configured. Click "Add Device" to get started.</div>';
+      container.innerHTML = '<div class="text-gray-500 text-sm bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">' + t('devices.no_devices') + '</div>';
       return;
     }
     container.innerHTML = devices.map(function (dev) {
       var id = dev.id || dev.name;
       var isActive = dev.active || dev.is_active || false;
-      var status = dev.status || (isActive ? 'active' : 'inactive');
       return '<div class="bg-gray-800 border border-gray-700 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4" data-device-id="' + escHtml(id) + '">' +
         '<div class="flex-1 min-w-0">' +
           '<div class="flex items-center gap-2 mb-1">' +
             '<span class="font-semibold text-white truncate">' + escHtml(dev.name || 'Unnamed') + '</span>' +
             (isActive
-              ? '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-green-900/60 text-green-400">Active</span>'
-              : '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-gray-700 text-gray-400">Inactive</span>') +
+              ? '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-green-900/60 text-green-400">' + t('devices.active_badge') + '</span>'
+              : '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-gray-700 text-gray-400">' + t('devices.inactive_badge') + '</span>') +
           '</div>' +
           '<div class="text-xs text-gray-400 font-mono truncate">' + escHtml(dev.url || '—') + '</div>' +
           (dev.username ? '<div class="text-xs text-gray-500 mt-0.5">User: ' + escHtml(dev.username) + '</div>' : '') +
         '</div>' +
         '<div class="flex flex-wrap gap-2">' +
-          (!isActive ? '<button onclick="activateDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors">Activate</button>' : '') +
-          '<button onclick="testDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-semibold rounded-lg transition-colors">Test</button>' +
-          '<button onclick="editDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-semibold rounded-lg transition-colors">Edit</button>' +
-          '<button onclick="deleteDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-red-800/60 hover:bg-red-700 text-red-300 text-xs font-semibold rounded-lg transition-colors">Delete</button>' +
+          (!isActive ? '<button onclick="activateDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors">' + t('devices.activate') + '</button>' : '') +
+          '<button onclick="testDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-semibold rounded-lg transition-colors">' + t('devices.test') + '</button>' +
+          '<button onclick="editDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-semibold rounded-lg transition-colors">' + t('devices.edit') + '</button>' +
+          '<button onclick="deleteDevice(\'' + escHtml(id) + '\')" class="px-3 py-1.5 bg-red-800/60 hover:bg-red-700 text-red-300 text-xs font-semibold rounded-lg transition-colors">' + t('devices.delete') + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -154,15 +153,15 @@
     var resultEl = document.getElementById('test-result');
     var bodyEl = document.getElementById('test-result-body');
     resultEl.classList.remove('hidden');
-    bodyEl.textContent = 'Testing connection…';
+    bodyEl.textContent = t('devices.testing');
     try {
       var res = await fetch('/api/devices/' + encodeURIComponent(id) + '/test', { method: 'GET' });
       var data = await res.json();
       if (res.ok && (data.success || data.ok || data.status === 'ok')) {
-        bodyEl.innerHTML = '<span class="text-green-400 font-semibold">Connected successfully.</span>' +
+        bodyEl.innerHTML = '<span class="text-green-400 font-semibold">' + t('devices.connected') + '</span>' +
           (data.message ? ' ' + escHtml(data.message) : '');
       } else {
-        bodyEl.innerHTML = '<span class="text-red-400 font-semibold">Connection failed.</span> ' +
+        bodyEl.innerHTML = '<span class="text-red-400 font-semibold">' + t('devices.connect_fail') + '</span> ' +
           escHtml(data.detail || data.message || 'Unknown error');
       }
     } catch (err) {
@@ -172,7 +171,7 @@
   }
 
   async function deleteDevice(id) {
-    if (!confirm('ลบ device นี้?')) return;
+    if (!confirm(t('common.confirm_delete'))) return;
     try {
       var res = await fetch('/api/devices/' + encodeURIComponent(id), { method: 'DELETE' });
       if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
@@ -186,7 +185,7 @@
   function editDevice(id) {
     // Find from current DOM or refetch
     openAddModal();
-    document.getElementById('modal-title').textContent = 'Edit Device';
+    document.getElementById('modal-title').textContent = t('devices.modal_edit');
     document.getElementById('device-id').value = id;
     // Try to fill from stored data
     if (_editingData && _editingData[id]) {
@@ -203,7 +202,7 @@
   function openAddModal() {
     document.getElementById('device-form').reset();
     document.getElementById('device-id').value = '';
-    document.getElementById('modal-title').textContent = 'Add Device';
+    document.getElementById('modal-title').textContent = t('devices.modal_add');
     document.getElementById('modal-error').classList.add('hidden');
     document.getElementById('device-modal').classList.remove('hidden');
   }

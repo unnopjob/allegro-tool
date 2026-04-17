@@ -4,8 +4,8 @@
 {% block content %}
 <div class="flex items-center justify-between mb-6">
   <div>
-    <h1 class="text-2xl font-bold text-white">Knowledge Base</h1>
-    <p class="text-xs text-gray-500 mt-0.5">Upload documents to enhance AI analysis</p>
+    <h1 class="text-2xl font-bold text-white" data-i18n="knowledge.title">Knowledge Base</h1>
+    <p class="text-xs text-gray-500 mt-0.5" data-i18n="knowledge.subtitle">Upload documents to enhance AI analysis</p>
   </div>
 </div>
 
@@ -28,8 +28,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
           d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
-      <p class="text-gray-300 text-sm font-medium mb-1">Drop files here or click to browse</p>
-      <p class="text-gray-500 text-xs">PDF, TXT, CSV, JSON &bull; Max 10 MB</p>
+      <p class="text-gray-300 text-sm font-medium mb-1" data-i18n="knowledge.drop">Drop files here or click to browse</p>
+      <p class="text-gray-500 text-xs" data-i18n="knowledge.formats">PDF, TXT, CSV, JSON &bull; Max 10 MB</p>
       <input id="file-input" type="file" accept=".pdf,.txt,.csv,.json" multiple class="hidden"
         onchange="handleFileSelect(event)" />
     </div>
@@ -40,7 +40,7 @@
     <!-- Upload progress -->
     <div id="upload-progress" class="hidden mt-4">
       <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-        <span id="progress-filename">Uploading…</span>
+        <span id="progress-filename" data-i18n="knowledge.uploading">Uploading…</span>
         <span id="progress-pct">0%</span>
       </div>
       <div class="w-full bg-gray-700 rounded-full h-1.5">
@@ -56,11 +56,11 @@
   <!-- Files List -->
   <div class="bg-gray-800 border border-gray-700 rounded-xl">
     <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-200">Uploaded Files</h2>
+      <h2 class="text-lg font-semibold text-gray-200" data-i18n="knowledge.files">Uploaded Files</h2>
       <button onclick="loadFiles()" class="text-xs text-gray-400 hover:text-gray-200 transition-colors">Refresh</button>
     </div>
     <div id="files-list" class="divide-y divide-gray-700 min-h-32">
-      <div class="flex items-center justify-center h-32 text-gray-500 text-sm">Loading…</div>
+      <div class="flex items-center justify-center h-32 text-gray-500 text-sm" data-i18n="common.loading">Loading…</div>
     </div>
   </div>
 </div>
@@ -177,7 +177,7 @@
     var errors = [];
     for (var i = 0; i < selectedFiles.length; i++) {
       var file = selectedFiles[i];
-      fname.textContent = 'Uploading ' + file.name + '…';
+      fname.textContent = t('knowledge.uploading') + ' ' + file.name;
       bar.style.width = '0%';
       pct.textContent = '0%';
 
@@ -229,7 +229,7 @@
 
   async function loadFiles() {
     var listEl = document.getElementById('files-list');
-    listEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-500 text-sm animate-pulse">Loading…</div>';
+    listEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-500 text-sm animate-pulse">' + t('common.loading') + '</div>';
     try {
       var res = await fetch('/api/knowledge');
       if (!res.ok) throw new Error(res.statusText);
@@ -244,7 +244,7 @@
   function renderFiles(files) {
     var listEl = document.getElementById('files-list');
     if (!files.length) {
-      listEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-500 text-sm">No files uploaded yet.</div>';
+      listEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-500 text-sm">' + t('knowledge.no_files') + '</div>';
       return;
     }
     listEl.innerHTML = files.map(function (f) {
@@ -269,7 +269,7 @@
   }
 
   async function deleteFile(id) {
-    if (!confirm('Delete this file from the knowledge base?')) return;
+    if (!confirm(t('common.confirm_delete'))) return;
     try {
       var res = await fetch('/api/knowledge/' + encodeURIComponent(id), { method: 'DELETE' });
       if (!res.ok) throw new Error((await res.json()).detail || res.statusText);

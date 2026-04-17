@@ -2,7 +2,7 @@
 {% block title %}Analysis — Allegro NTD{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold text-white mb-6">Network Analysis</h1>
+<h1 class="text-2xl font-bold text-white mb-6" data-i18n="analysis.title">Network Analysis</h1>
 
 <!-- Warning Banner (no device / no API key) -->
 <div id="warning-banner" class="hidden mb-5 p-4 bg-yellow-900/50 border border-yellow-700 rounded-lg flex items-start gap-3">
@@ -20,19 +20,19 @@
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Analysis Type</h2>
       <div class="space-y-2" id="analysis-type-buttons">
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300 text-sm font-medium transition-all" data-type="overview">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-blue-500 bg-blue-600/20 text-blue-300 text-sm font-medium transition-all" data-type="overview" data-i18n="analysis.btn_overview">
           Overview
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="security">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="security" data-i18n="analysis.btn_security">
           Security
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="bandwidth">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="bandwidth" data-i18n="analysis.btn_bandwidth">
           Bandwidth
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="tcp">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="tcp" data-i18n="analysis.btn_tcp">
           TCP Flow
         </button>
-        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="rootcause">
+        <button class="analysis-type-btn w-full text-left px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700/50 text-sm font-medium transition-all" data-type="rootcause" data-i18n="analysis.btn_rootcause">
           Root Cause
         </button>
       </div>
@@ -43,6 +43,7 @@
       <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Custom Question <span class="text-gray-500 font-normal normal-case">(optional)</span></h2>
       <textarea id="analysis-question" rows="4"
         class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+        data-i18n="analysis.question_placeholder" data-i18n-attr="placeholder"
         placeholder="e.g. Why is there high latency between 10.0.0.1 and 10.0.0.2?"></textarea>
     </div>
 
@@ -53,7 +54,7 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
       </svg>
-      Run Analysis
+      <span id="analyze-btn-text" data-i18n="analysis.btn_analyze">Run Analysis</span>
     </button>
   </div>
 
@@ -73,28 +74,28 @@
     <!-- Path & Port Check -->
     <div class="bg-gray-800 rounded-xl border border-gray-700">
       <div class="px-5 py-4 border-b border-gray-700">
-        <h2 class="text-lg font-semibold text-gray-200">Path & Port Check</h2>
+        <h2 class="text-lg font-semibold text-gray-200" data-i18n="analysis.pathcheck_title">Path & Port Check</h2>
         <p class="text-xs text-gray-500 mt-0.5">Verify connectivity between hosts</p>
       </div>
       <div class="px-5 py-4 space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Source IP <span class="text-gray-600">(optional)</span></label>
+            <label class="block text-xs text-gray-400 mb-1" data-i18n="analysis.src_ip">Source IP <span class="text-gray-600">(optional)</span></label>
             <input id="src-ip" type="text" placeholder="192.168.1.1"
               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Destination IP <span class="text-red-400">*</span></label>
+            <label class="block text-xs text-gray-400 mb-1" data-i18n="analysis.dst_ip">Destination IP <span class="text-red-400">*</span></label>
             <input id="dst-ip" type="text" placeholder="8.8.8.8"
               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Port <span class="text-gray-600">(optional)</span></label>
+            <label class="block text-xs text-gray-400 mb-1" data-i18n="analysis.port">Port <span class="text-gray-600">(optional)</span></label>
             <input id="port" type="number" placeholder="80"
               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500" />
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Protocol</label>
+            <label class="block text-xs text-gray-400 mb-1" data-i18n="analysis.protocol">Protocol</label>
             <select id="protocol"
               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
               <option value="tcp">TCP</option>
@@ -107,19 +108,19 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
           </svg>
-          Check Path
+          <span id="pathcheck-btn-text" data-i18n="analysis.btn_check">Check Path</span>
         </button>
 
         <!-- Path Check Results -->
         <div id="pathcheck-results" class="hidden space-y-4 mt-2">
           <!-- Ping card -->
           <div class="bg-gray-700/50 rounded-lg p-4">
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ping</h3>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" data-i18n="analysis.ping_result">Ping</h3>
             <div id="ping-result" class="text-sm text-gray-300"></div>
           </div>
           <!-- Traceroute -->
           <div class="bg-gray-700/50 rounded-lg p-4">
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Traceroute</h3>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" data-i18n="analysis.traceroute">Traceroute</h3>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
@@ -135,7 +136,7 @@
           </div>
           <!-- Port Status -->
           <div id="port-status-card" class="hidden bg-gray-700/50 rounded-lg p-4">
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Port Status</h3>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2" data-i18n="analysis.port_status">Port Status</h3>
             <div id="port-result" class="text-sm text-gray-300"></div>
           </div>
         </div>
@@ -173,13 +174,13 @@
       var warnings = [];
       if (settingsRes.ok) {
         var s = await settingsRes.json();
-        if (!s.has_key && !s.gemini_api_key) warnings.push('No Gemini API key configured. Go to Settings to add one.');
+        if (!s.has_key && !s.gemini_api_key) warnings.push(t('analysis.no_key_warn'));
       }
       if (devicesRes.ok) {
         var d = await devicesRes.json();
         var devices = d.devices || d || [];
         var hasActive = Array.isArray(devices) && devices.some(function (dev) { return dev.active || dev.is_active; });
-        if (!hasActive) warnings.push('No active device selected. Go to Devices to activate one.');
+        if (!hasActive) warnings.push(t('analysis.no_device_warn'));
       }
       if (warnings.length > 0) {
         document.getElementById('warning-text').textContent = warnings.join(' ');
@@ -192,12 +193,14 @@
 
   async function runAnalysis() {
     var btn = document.getElementById('analyze-btn');
+    var btnText = document.getElementById('analyze-btn-text');
     var spinner = document.getElementById('analyze-spinner');
     var resultEl = document.getElementById('analysis-result');
     var question = document.getElementById('analysis-question').value.trim();
 
     btn.disabled = true;
     spinner.classList.remove('hidden');
+    btnText.textContent = t('analysis.analyzing');
     resultEl.textContent = '';
     document.getElementById('copy-result-btn').classList.add('hidden');
 
@@ -244,6 +247,7 @@
     } finally {
       btn.disabled = false;
       spinner.classList.add('hidden');
+      btnText.textContent = t('analysis.btn_analyze');
     }
   }
 
@@ -260,12 +264,14 @@
     if (!dst) { alert('Destination IP is required.'); return; }
 
     var btn = document.getElementById('pathcheck-btn');
+    var btnText = document.getElementById('pathcheck-btn-text');
     var spinner = document.getElementById('path-spinner');
     var errEl = document.getElementById('pathcheck-error');
     var results = document.getElementById('pathcheck-results');
 
     btn.disabled = true;
     spinner.classList.remove('hidden');
+    btnText.textContent = t('analysis.checking');
     errEl.classList.add('hidden');
     results.classList.add('hidden');
 
@@ -345,6 +351,7 @@
     } finally {
       btn.disabled = false;
       spinner.classList.add('hidden');
+      btnText.textContent = t('analysis.btn_check');
     }
   }
 

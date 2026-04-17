@@ -30,17 +30,33 @@
 
         <!-- Nav links (desktop) -->
         <div class="hidden md:flex items-center gap-1 flex-1">
-          <a href="/dashboard"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Dashboard</a>
-          <a href="/analysis"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Analysis</a>
-          <a href="/chat"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Chat</a>
-          <a href="/devices"    class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Devices</a>
-          <a href="/knowledge"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Knowledge</a>
-          <a href="/settings"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Settings</a>
-          <a href="/help"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Help</a>
+          <a href="/dashboard"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.dashboard">Dashboard</a>
+          <a href="/analysis"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.analysis">Analysis</a>
+          <a href="/chat"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.chat">Chat</a>
+          <a href="/devices"    class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.devices">Devices</a>
+          <a href="/knowledge"  class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.knowledge">Knowledge</a>
+          <a href="/settings"   class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.settings">Settings</a>
+          <a href="/help"       class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.help">Help</a>
+        </div>
+
+        <!-- Language toggle -->
+        <div class="hidden md:flex items-center ml-4">
+          <div class="flex items-center gap-1 bg-gray-700 rounded-lg p-0.5">
+            <button onclick="setLang('en')" id="btn-en"
+              class="px-2.5 py-1 text-xs font-semibold rounded-md transition-colors">EN</button>
+            <button onclick="setLang('th')" id="btn-th"
+              class="px-2.5 py-1 text-xs font-semibold rounded-md transition-colors">TH</button>
+          </div>
         </div>
 
         <!-- Mobile menu button -->
-        <div class="md:hidden ml-auto">
+        <div class="md:hidden ml-auto flex items-center gap-2">
+          <div class="flex items-center gap-1 bg-gray-700 rounded-lg p-0.5">
+            <button onclick="setLang('en')" id="btn-en-mobile"
+              class="px-2.5 py-1 text-xs font-semibold rounded-md transition-colors">EN</button>
+            <button onclick="setLang('th')" id="btn-th-mobile"
+              class="px-2.5 py-1 text-xs font-semibold rounded-md transition-colors">TH</button>
+          </div>
           <button id="mobile-menu-btn" class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors" aria-label="Open menu">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -51,13 +67,13 @@
 
       <!-- Mobile nav menu -->
       <div id="mobile-menu" class="hidden md:hidden pb-3 space-y-1">
-        <a href="/dashboard"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Dashboard</a>
-        <a href="/analysis"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Analysis</a>
-        <a href="/chat"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Chat</a>
-        <a href="/devices"    class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Devices</a>
-        <a href="/knowledge"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Knowledge</a>
-        <a href="/settings"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Settings</a>
-        <a href="/help"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Help</a>
+        <a href="/dashboard"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.dashboard">Dashboard</a>
+        <a href="/analysis"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.analysis">Analysis</a>
+        <a href="/chat"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.chat">Chat</a>
+        <a href="/devices"    class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.devices">Devices</a>
+        <a href="/knowledge"  class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.knowledge">Knowledge</a>
+        <a href="/settings"   class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.settings">Settings</a>
+        <a href="/help"       class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-i18n="nav.help">Help</a>
       </div>
     </div>
   </nav>
@@ -73,6 +89,273 @@
   <footer class="bg-gray-800 border-t border-gray-700 flex-shrink-0 py-3 px-4 text-center text-xs text-gray-500">
     Allegro Network Troubleshooting Dashboard &mdash; Powered by Google Gemini AI
   </footer>
+
+  <script>
+  const I18N = {
+    en: {
+      // Navbar
+      'nav.dashboard': 'Dashboard',
+      'nav.analysis': 'Analysis',
+      'nav.chat': 'Chat',
+      'nav.devices': 'Devices',
+      'nav.knowledge': 'Knowledge',
+      'nav.settings': 'Settings',
+      'nav.help': 'Help',
+      // Dashboard
+      'dash.title': 'Dashboard',
+      'dash.health': 'Network Health Score',
+      'dash.interfaces': 'Interfaces',
+      'dash.top_ips': 'Top IPs',
+      'dash.loading': 'Loading...',
+      'dash.no_device': 'No active device. Go to Devices to configure.',
+      'dash.rx': 'RX',
+      'dash.tx': 'TX',
+      'dash.refresh': 'Auto-refresh every 10s',
+      // Analysis
+      'analysis.title': 'AI Analysis',
+      'analysis.subtitle': 'AI-powered network analysis',
+      'analysis.btn_overview': 'Overview',
+      'analysis.btn_security': 'Security',
+      'analysis.btn_bandwidth': 'Bandwidth',
+      'analysis.btn_tcp': 'TCP Flow',
+      'analysis.btn_rootcause': 'Root Cause',
+      'analysis.question_placeholder': 'Additional question (optional)...',
+      'analysis.btn_analyze': 'Analyze',
+      'analysis.analyzing': 'Analyzing...',
+      'analysis.pathcheck_title': 'Path & Port Check',
+      'analysis.src_ip': 'Source IP (optional)',
+      'analysis.dst_ip': 'Destination IP *',
+      'analysis.port': 'Port (optional)',
+      'analysis.protocol': 'Protocol',
+      'analysis.btn_check': 'Check',
+      'analysis.checking': 'Checking...',
+      'analysis.ping_result': 'Ping Result',
+      'analysis.traceroute': 'Traceroute',
+      'analysis.port_status': 'Port Status',
+      'analysis.no_device_warn': 'No active device configured.',
+      'analysis.no_key_warn': 'Gemini API Key not configured.',
+      // Chat
+      'chat.title': 'AI Chat',
+      'chat.subtitle': 'Ask anything about your network',
+      'chat.placeholder': 'Type your question... (Enter to send, Shift+Enter for newline)',
+      'chat.clear': 'Clear',
+      'chat.welcome': "Hello! I'm your Allegro Network Troubleshooting assistant powered by Gemini AI. How can I help you today?",
+      'chat.thinking': 'Thinking...',
+      // Devices
+      'devices.title': 'Devices',
+      'devices.add': 'Add Device',
+      'devices.no_devices': 'No devices configured. Click "Add Device" to get started.',
+      'devices.activate': 'Activate',
+      'devices.test': 'Test',
+      'devices.edit': 'Edit',
+      'devices.delete': 'Delete',
+      'devices.active_badge': 'Active',
+      'devices.inactive_badge': 'Inactive',
+      'devices.modal_add': 'Add Device',
+      'devices.modal_edit': 'Edit Device',
+      'devices.name': 'Device Name',
+      'devices.ip': 'IP Address',
+      'devices.username': 'Username',
+      'devices.password': 'Password',
+      'devices.verify_ssl': 'Verify SSL certificate',
+      'devices.save': 'Save Device',
+      'devices.cancel': 'Cancel',
+      'devices.test_result': 'Connection Test Result',
+      'devices.dismiss': 'Dismiss',
+      'devices.testing': 'Testing connection...',
+      'devices.connected': 'Connected successfully.',
+      'devices.connect_fail': 'Connection failed.',
+      // Knowledge
+      'knowledge.title': 'Knowledge Base',
+      'knowledge.subtitle': 'Upload documents for AI reference',
+      'knowledge.drop': 'Drag & drop file here or click to browse',
+      'knowledge.formats': 'Supported: PDF, TXT, CSV, JSON (max 10MB)',
+      'knowledge.files': 'Uploaded Files',
+      'knowledge.no_files': 'No files uploaded yet.',
+      'knowledge.delete': 'Delete',
+      'knowledge.uploading': 'Uploading...',
+      // Settings
+      'settings.title': 'Settings',
+      'settings.api_key_title': 'Gemini API Key',
+      'settings.api_key_desc': 'Required for AI analysis and chat features',
+      'settings.api_key_label': 'API Key',
+      'settings.save_test': 'Save & Test',
+      'settings.clear': 'Clear',
+      'settings.no_key': 'Not Set',
+      'settings.valid': 'Valid',
+      'settings.invalid': 'Invalid Key',
+      'settings.get_key': "Don't have a Gemini API key?",
+      'settings.get_key_link': 'Get one free at Google AI Studio',
+      'settings.about': 'About',
+      'settings.app_name': 'Allegro Network Troubleshooting Dashboard',
+      'settings.model': 'Gemini 2.5 Flash',
+      // Help
+      'help.title': 'Help',
+      'help.search': 'Search...',
+      // Common
+      'common.loading': 'Loading...',
+      'common.error': 'Error',
+      'common.success': 'Success',
+      'common.save': 'Save',
+      'common.cancel': 'Cancel',
+      'common.delete': 'Delete',
+      'common.confirm_delete': 'Delete this item?',
+    },
+    th: {
+      // Navbar
+      'nav.dashboard': 'แดชบอร์ด',
+      'nav.analysis': 'วิเคราะห์',
+      'nav.chat': 'แชท',
+      'nav.devices': 'อุปกรณ์',
+      'nav.knowledge': 'ฐานความรู้',
+      'nav.settings': 'ตั้งค่า',
+      'nav.help': 'ช่วยเหลือ',
+      // Dashboard
+      'dash.title': 'แดชบอร์ด',
+      'dash.health': 'คะแนนสุขภาพเครือข่าย',
+      'dash.interfaces': 'อินเทอร์เฟซ',
+      'dash.top_ips': 'IP ที่ใช้งานสูงสุด',
+      'dash.loading': 'กำลังโหลด...',
+      'dash.no_device': 'ยังไม่ได้ตั้งค่าอุปกรณ์ ไปที่ Devices เพื่อเพิ่มอุปกรณ์',
+      'dash.rx': 'รับ',
+      'dash.tx': 'ส่ง',
+      'dash.refresh': 'รีเฟรชอัตโนมัติทุก 10 วินาที',
+      // Analysis
+      'analysis.title': 'วิเคราะห์ด้วย AI',
+      'analysis.subtitle': 'วิเคราะห์เครือข่ายด้วย AI',
+      'analysis.btn_overview': 'ภาพรวม',
+      'analysis.btn_security': 'ความปลอดภัย',
+      'analysis.btn_bandwidth': 'แบนด์วิดธ์',
+      'analysis.btn_tcp': 'TCP Flow',
+      'analysis.btn_rootcause': 'สาเหตุหลัก',
+      'analysis.question_placeholder': 'คำถามเพิ่มเติม (ไม่บังคับ)...',
+      'analysis.btn_analyze': 'วิเคราะห์',
+      'analysis.analyzing': 'กำลังวิเคราะห์...',
+      'analysis.pathcheck_title': 'ตรวจสอบเส้นทางและพอร์ต',
+      'analysis.src_ip': 'IP ต้นทาง (ไม่บังคับ)',
+      'analysis.dst_ip': 'IP ปลายทาง *',
+      'analysis.port': 'พอร์ต (ไม่บังคับ)',
+      'analysis.protocol': 'โปรโตคอล',
+      'analysis.btn_check': 'ตรวจสอบ',
+      'analysis.checking': 'กำลังตรวจสอบ...',
+      'analysis.ping_result': 'ผล Ping',
+      'analysis.traceroute': 'เส้นทาง (Traceroute)',
+      'analysis.port_status': 'สถานะพอร์ต',
+      'analysis.no_device_warn': 'ยังไม่ได้ตั้งค่าอุปกรณ์',
+      'analysis.no_key_warn': 'ยังไม่ได้ตั้งค่า Gemini API Key',
+      // Chat
+      'chat.title': 'แชทกับ AI',
+      'chat.subtitle': 'ถามอะไรเกี่ยวกับเครือข่ายของคุณได้เลย',
+      'chat.placeholder': 'พิมพ์คำถาม... (Enter เพื่อส่ง, Shift+Enter ขึ้นบรรทัดใหม่)',
+      'chat.clear': 'ล้าง',
+      'chat.welcome': 'สวัสดีครับ! ผมเป็น AI ช่วยแก้ปัญหาเครือข่าย Allegro ขับเคลื่อนด้วย Gemini AI มีอะไรให้ช่วยไหมครับ?',
+      'chat.thinking': 'กำลังคิด...',
+      // Devices
+      'devices.title': 'อุปกรณ์',
+      'devices.add': 'เพิ่มอุปกรณ์',
+      'devices.no_devices': 'ยังไม่มีอุปกรณ์ กด "เพิ่มอุปกรณ์" เพื่อเริ่มต้น',
+      'devices.activate': 'เปิดใช้งาน',
+      'devices.test': 'ทดสอบ',
+      'devices.edit': 'แก้ไข',
+      'devices.delete': 'ลบ',
+      'devices.active_badge': 'ใช้งานอยู่',
+      'devices.inactive_badge': 'ไม่ได้ใช้งาน',
+      'devices.modal_add': 'เพิ่มอุปกรณ์',
+      'devices.modal_edit': 'แก้ไขอุปกรณ์',
+      'devices.name': 'ชื่ออุปกรณ์',
+      'devices.ip': 'IP Address',
+      'devices.username': 'ชื่อผู้ใช้',
+      'devices.password': 'รหัสผ่าน',
+      'devices.verify_ssl': 'ตรวจสอบใบรับรอง SSL',
+      'devices.save': 'บันทึกอุปกรณ์',
+      'devices.cancel': 'ยกเลิก',
+      'devices.test_result': 'ผลการทดสอบการเชื่อมต่อ',
+      'devices.dismiss': 'ปิด',
+      'devices.testing': 'กำลังทดสอบการเชื่อมต่อ...',
+      'devices.connected': 'เชื่อมต่อสำเร็จ',
+      'devices.connect_fail': 'การเชื่อมต่อล้มเหลว',
+      // Knowledge
+      'knowledge.title': 'ฐานความรู้',
+      'knowledge.subtitle': 'อัปโหลดเอกสารสำหรับ AI อ้างอิง',
+      'knowledge.drop': 'ลากและวางไฟล์ที่นี่ หรือคลิกเพื่อเลือก',
+      'knowledge.formats': 'รองรับ: PDF, TXT, CSV, JSON (สูงสุด 10MB)',
+      'knowledge.files': 'ไฟล์ที่อัปโหลด',
+      'knowledge.no_files': 'ยังไม่มีไฟล์ที่อัปโหลด',
+      'knowledge.delete': 'ลบ',
+      'knowledge.uploading': 'กำลังอัปโหลด...',
+      // Settings
+      'settings.title': 'ตั้งค่า',
+      'settings.api_key_title': 'Gemini API Key',
+      'settings.api_key_desc': 'จำเป็นสำหรับการวิเคราะห์ AI และฟีเจอร์แชท',
+      'settings.api_key_label': 'API Key',
+      'settings.save_test': 'บันทึกและทดสอบ',
+      'settings.clear': 'ล้าง',
+      'settings.no_key': 'ยังไม่ได้ตั้งค่า',
+      'settings.valid': 'ใช้งานได้',
+      'settings.invalid': 'Key ไม่ถูกต้อง',
+      'settings.get_key': 'ยังไม่มี Gemini API Key?',
+      'settings.get_key_link': 'รับฟรีที่ Google AI Studio',
+      'settings.about': 'เกี่ยวกับ',
+      'settings.app_name': 'Allegro Network Troubleshooting Dashboard',
+      'settings.model': 'Gemini 2.5 Flash',
+      // Help
+      'help.title': 'ช่วยเหลือ',
+      'help.search': 'ค้นหา...',
+      // Common
+      'common.loading': 'กำลังโหลด...',
+      'common.error': 'ข้อผิดพลาด',
+      'common.success': 'สำเร็จ',
+      'common.save': 'บันทึก',
+      'common.cancel': 'ยกเลิก',
+      'common.delete': 'ลบ',
+      'common.confirm_delete': 'ลบรายการนี้?',
+    }
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'en';
+
+  function t(key) {
+    return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['en'][key]) || key;
+  }
+
+  function applyLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    // Update all data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const attr = el.getAttribute('data-i18n-attr');
+      if (attr) {
+        el.setAttribute(attr, t(key));
+      } else {
+        el.textContent = t(key);
+      }
+    });
+    // Update toggle button styles (desktop)
+    var btnEn = document.getElementById('btn-en');
+    var btnTh = document.getElementById('btn-th');
+    if (btnEn) btnEn.className = lang === 'en'
+      ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 text-white'
+      : 'px-2.5 py-1 text-xs font-semibold rounded-md text-gray-400 hover:text-white';
+    if (btnTh) btnTh.className = lang === 'th'
+      ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 text-white'
+      : 'px-2.5 py-1 text-xs font-semibold rounded-md text-gray-400 hover:text-white';
+    // Update toggle button styles (mobile)
+    var btnEnM = document.getElementById('btn-en-mobile');
+    var btnThM = document.getElementById('btn-th-mobile');
+    if (btnEnM) btnEnM.className = lang === 'en'
+      ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 text-white'
+      : 'px-2.5 py-1 text-xs font-semibold rounded-md text-gray-400 hover:text-white';
+    if (btnThM) btnThM.className = lang === 'th'
+      ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 text-white'
+      : 'px-2.5 py-1 text-xs font-semibold rounded-md text-gray-400 hover:text-white';
+  }
+
+  function setLang(lang) { applyLang(lang); }
+
+  // Apply on load
+  document.addEventListener('DOMContentLoaded', () => applyLang(currentLang));
+  </script>
 
   {% block extra_scripts %}{% endblock %}
 

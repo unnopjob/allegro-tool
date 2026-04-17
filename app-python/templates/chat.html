@@ -6,8 +6,8 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-4 flex-shrink-0">
     <div>
-      <h1 class="text-2xl font-bold text-white">AI Chat</h1>
-      <p class="text-xs text-gray-500 mt-0.5">Ask anything about your network</p>
+      <h1 class="text-2xl font-bold text-white" data-i18n="chat.title">AI Chat</h1>
+      <p class="text-xs text-gray-500 mt-0.5" data-i18n="chat.subtitle">Ask anything about your network</p>
     </div>
     <button id="clear-btn" onclick="clearHistory()"
       class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm text-gray-300 hover:text-white rounded-lg transition-colors">
@@ -15,7 +15,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
       </svg>
-      Clear
+      <span data-i18n="chat.clear">Clear</span>
     </button>
   </div>
 
@@ -26,7 +26,7 @@
     <div class="flex items-start gap-3">
       <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">AI</div>
       <div class="max-w-[80%] bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3">
-        <p class="text-sm text-gray-200">Hello! I'm your Allegro Network Troubleshooting assistant powered by Gemini AI. How can I help you today?</p>
+        <p id="welcome-msg" class="text-sm text-gray-200" data-i18n="chat.welcome">Hello! I'm your Allegro Network Troubleshooting assistant powered by Gemini AI. How can I help you today?</p>
       </div>
     </div>
   </div>
@@ -46,6 +46,7 @@
   <!-- Input area -->
   <div class="flex-shrink-0 flex gap-3">
     <textarea id="message-input" rows="2"
+      data-i18n="chat.placeholder" data-i18n-attr="placeholder"
       placeholder="Type your question… (Enter to send, Shift+Enter for newline)"
       class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none transition-colors"></textarea>
     <button id="send-btn" onclick="sendMessage()"
@@ -206,7 +207,7 @@
       '<div class="flex items-start gap-3">' +
         '<div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">AI</div>' +
         '<div class="max-w-[80%] bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3">' +
-          '<p class="text-sm text-gray-200">Chat cleared. How can I help you?</p>' +
+          '<p class="text-sm text-gray-200">' + t('chat.welcome') + '</p>' +
         '</div>' +
       '</div>';
   }
