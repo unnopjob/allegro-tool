@@ -12,7 +12,7 @@ class DeviceIn(BaseModel):
     name: str
     url: str
     username: str
-    password: str
+    password: str = ""           # optional on edit — empty string = keep existing
     verify_ssl: int = 0
 
     @field_validator("verify_ssl", mode="before")
@@ -48,15 +48,18 @@ def create_device(body: DeviceIn):
 @router.put("/{device_id}")
 def update_device_handler(device_id: str, body: DeviceIn):
     devices = get_devices()
-    if not any(d["id"] == device_id for d in devices):
+    existing = next((d for d in devices if d["id"] == device_id), None)
+    if not existing:
         raise HTTPException(404, "ไม่พบ device")
     updates = {
         "name": body.name,
         "url": body.url.rstrip("/"),
         "username": body.username,
-        "password": body.password,
         "verify_ssl": body.verify_ssl,
     }
+    # Only update password if a new one was provided; otherwise keep existing
+    if body.password:
+        updates["password"] = body.password
     update_device(device_id, updates)
     return {"success": True}
 

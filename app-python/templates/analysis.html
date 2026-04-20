@@ -66,7 +66,7 @@
         <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider">Analysis Result</h2>
         <button id="copy-result-btn" class="hidden text-xs text-gray-400 hover:text-gray-200 transition-colors" onclick="copyResult()">Copy</button>
       </div>
-      <div id="analysis-result" class="px-5 py-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap min-h-32">
+      <div id="analysis-result" class="px-5 py-4 text-sm text-gray-300 leading-relaxed min-h-32 prose-allegro">
         <span class="text-gray-500">Select an analysis type and click "Run Analysis".</span>
       </div>
     </div>
@@ -191,6 +191,63 @@
 
   checkWarnings();
 
+  // Simple markdown → HTML renderer (no external library needed)
+  function renderMarkdown(text) {
+    var escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    var lines = escaped.split('\n');
+    var html = '';
+    var inList = false;
+
+    lines.forEach(function (line) {
+      // ## Heading
+      if (/^###\s/.test(line)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<h3 class="text-base font-bold text-white mt-4 mb-1">' + line.replace(/^###\s/, '') + '</h3>';
+      } else if (/^##\s/.test(line)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<h2 class="text-base font-bold text-blue-300 mt-5 mb-2 border-b border-gray-700 pb-1">' + line.replace(/^##\s/, '') + '</h2>';
+      } else if (/^#\s/.test(line)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<h1 class="text-lg font-bold text-white mt-5 mb-2">' + line.replace(/^#\s/, '') + '</h1>';
+      // bullet list (- or * or •)
+      } else if (/^[\-\*•]\s/.test(line)) {
+        if (!inList) { html += '<ul class="list-disc list-inside space-y-1 my-2 text-gray-300">'; inList = true; }
+        var item = line.replace(/^[\-\*•]\s/, '');
+        html += '<li>' + applyInline(item) + '</li>';
+      // numbered list
+      } else if (/^\d+\.\s/.test(line)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<p class="my-1 ml-4">' + applyInline(line) + '</p>';
+      // empty line = paragraph break
+      } else if (line.trim() === '') {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<div class="my-2"></div>';
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<p class="my-1">' + applyInline(line) + '</p>';
+      }
+    });
+    if (inList) html += '</ul>';
+    return html;
+  }
+
+  function applyInline(text) {
+    // **bold**
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+    // *italic*
+    text = text.replace(/\*(.+?)\*/g, '<em class="text-gray-200">$1</em>');
+    // `code`
+    text = text.replace(/`(.+?)`/g, '<code class="bg-gray-700 px-1 rounded text-xs font-mono text-blue-200">$1</code>');
+    return text;
+  }
+
+  // Raw text accumulator for copy
+  var _rawResult = '';
+
   async function runAnalysis() {
     var btn = document.getElementById('analyze-btn');
     var btnText = document.getElementById('analyze-btn-text');
@@ -201,7 +258,8 @@
     btn.disabled = true;
     spinner.classList.remove('hidden');
     btnText.textContent = t('analysis.analyzing');
-    resultEl.textContent = '';
+    resultEl.innerHTML = '<span class="text-gray-500 animate-pulse">' + t('analysis.analyzing') + '</span>';
+    _rawResult = '';
     document.getElementById('copy-result-btn').classList.add('hidden');
 
     try {
@@ -222,6 +280,7 @@
         var reader = res.body.getReader();
         var decoder = new TextDecoder();
         var buffer = '';
+        resultEl.innerHTML = '';
         while (true) {
           var chunk = await reader.read();
           if (chunk.done) break;
@@ -232,14 +291,20 @@
             if (line.startsWith('data: ')) {
               var data = line.slice(6);
               if (data === '[DONE]') return;
-              try { var parsed = JSON.parse(data); resultEl.textContent += parsed.text || parsed.content || ''; }
-              catch (e) { resultEl.textContent += data; }
+              try {
+                var parsed = JSON.parse(data);
+                _rawResult += parsed.text || parsed.content || '';
+              } catch (e) {
+                _rawResult += data;
+              }
+              resultEl.innerHTML = renderMarkdown(_rawResult);
             }
           });
         }
       } else {
         var json = await res.json();
-        resultEl.textContent = json.result || json.content || JSON.stringify(json, null, 2);
+        _rawResult = json.result || json.content || JSON.stringify(json, null, 2);
+        resultEl.innerHTML = renderMarkdown(_rawResult);
       }
       document.getElementById('copy-result-btn').classList.remove('hidden');
     } catch (err) {
@@ -252,7 +317,7 @@
   }
 
   function copyResult() {
-    navigator.clipboard.writeText(document.getElementById('analysis-result').textContent).then(function () {
+    navigator.clipboard.writeText(_rawResult).then(function () {
       var btn = document.getElementById('copy-result-btn');
       btn.textContent = 'Copied!';
       setTimeout(function () { btn.textContent = 'Copy'; }, 2000);

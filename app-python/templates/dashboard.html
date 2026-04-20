@@ -139,9 +139,9 @@
     // dasharray = (score / 100) * circumference(r=15.9) ≈ 100 units scaled
     const pct = (score / 100) * 100;
     arc.setAttribute('stroke-dasharray', pct + ' 100');
-    if (score >= 80) { arc.setAttribute('stroke', '#22c55e'); lbl.textContent = 'Healthy'; lbl.className = 'text-sm font-medium text-green-400'; }
-    else if (score >= 50) { arc.setAttribute('stroke', '#f59e0b'); lbl.textContent = 'Degraded'; lbl.className = 'text-sm font-medium text-yellow-400'; }
-    else { arc.setAttribute('stroke', '#ef4444'); lbl.textContent = 'Critical'; lbl.className = 'text-sm font-medium text-red-400'; }
+    if (score >= 80) { arc.setAttribute('stroke', '#22c55e'); lbl.textContent = t('dash.health_good'); lbl.className = 'text-sm font-medium text-green-400'; }
+    else if (score >= 50) { arc.setAttribute('stroke', '#f59e0b'); lbl.textContent = t('dash.health_warn'); lbl.className = 'text-sm font-medium text-yellow-400'; }
+    else { arc.setAttribute('stroke', '#ef4444'); lbl.textContent = t('dash.health_crit'); lbl.className = 'text-sm font-medium text-red-400'; }
   }
 
   function renderInterfaces(interfaces) {
@@ -238,9 +238,27 @@
         renderInterfaces(interfaces);
         renderHealth(calcHealthScore(interfaces));
       } else {
-        setError('Failed to load interface data. ' + (ifaceRes.reason || ''));
+        // Detect "no active device" (503) vs real error
+        var errMsg = t('dash.no_device');
+        if (ifaceRes.status === 'fulfilled') {
+          try {
+            var errData = await ifaceRes.value.json();
+            if (ifaceRes.value.status !== 503) {
+              errMsg = errData.error || errData.detail || t('dash.load_error');
+            }
+          } catch (e) {}
+        }
+        setError(errMsg);
         document.getElementById('health-score-val').textContent = '—';
-        document.getElementById('health-label').textContent = 'Unavailable';
+        document.getElementById('health-label').textContent = t('dash.health_na');
+        document.getElementById('stat-total').textContent = '—';
+        document.getElementById('stat-up').textContent = '—';
+        document.getElementById('stat-down').textContent = '—';
+        document.getElementById('interface-grid').innerHTML =
+          '<div class="col-span-full text-center py-8">' +
+          '<p class="text-gray-500 text-sm mb-3">' + t('dash.no_device') + '</p>' +
+          '<a href="/devices" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors">' + t('dash.go_devices') + '</a>' +
+          '</div>';
       }
 
       // Top IPs
@@ -249,7 +267,7 @@
         renderTopIPs(ipData);
       } else {
         document.getElementById('top-ips-body').innerHTML =
-          '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">IP data unavailable.</td></tr>';
+          '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">' + t('dash.no_device') + '</td></tr>';
       }
     } catch (err) {
       setError('Network error: ' + err.message);
