@@ -3,10 +3,7 @@ from dotenv import load_dotenv
 load_dotenv(".env.local")
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 
 from routers import devices, settings, knowledge, chat, analysis, tools, allegro_proxy, ask
 
@@ -51,7 +48,7 @@ if __name__ == "__main__":
     import threading
 
     def open_browser():
-        import time; time.sleep(1.5)
+        import time; time.sleep(3)
         webbrowser.open("http://localhost:8000")
 
     threading.Thread(target=open_browser, daemon=True).start()

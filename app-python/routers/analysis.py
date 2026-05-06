@@ -67,8 +67,14 @@ async def analyze(body: AnalysisIn):
 กรุณาวิเคราะห์และตอบเป็นภาษาไทย ใช้ bullet points และให้คำแนะนำที่เป็นรูปธรรม"""
 
     def generate():
-        for chunk in gemini_stream(prompt, system="คุณคือผู้เชี่ยวชาญด้าน Network Analysis"):
-            yield f"data: {chunk}\n\n"
+        try:
+            for chunk in gemini_stream(prompt, system="คุณคือผู้เชี่ยวชาญด้าน Network Analysis"):
+                yield f"data: {chunk}\n\n"
+        except ValueError as e:
+            # e.g. "Gemini API key not configured"
+            yield f"data: ⚠️ {e}\n\n"
+        except Exception as e:
+            yield f"data: ⚠️ Error: {e}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

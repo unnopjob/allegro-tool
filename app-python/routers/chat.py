@@ -70,18 +70,24 @@ async def chat(body: ChatIn):
     collected = []
 
     def generate():
-        for chunk in gemini_stream(full_prompt, system=SYSTEM):
-            collected.append(chunk)
-            yield f"data: {chunk}\n\n"
-        # Save AI response
-        all_msgs = get_chat_history(body.session_id)
-        add_chat_message({
-            "id": next_id(all_msgs),
-            "session_id": body.session_id,
-            "role": "assistant",
-            "content": "".join(collected),
-            "ts": time.time(),
-        })
+        try:
+            for chunk in gemini_stream(full_prompt, system=SYSTEM):
+                collected.append(chunk)
+                yield f"data: {chunk}\n\n"
+            # Save AI response
+            all_msgs = get_chat_history(body.session_id)
+            add_chat_message({
+                "id": next_id(all_msgs),
+                "session_id": body.session_id,
+                "role": "assistant",
+                "content": "".join(collected),
+                "ts": time.time(),
+            })
+        except ValueError as e:
+            # e.g. "Gemini API key not configured"
+            yield f"data: ⚠️ {e}\n\n"
+        except Exception as e:
+            yield f"data: ⚠️ Error: {e}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
