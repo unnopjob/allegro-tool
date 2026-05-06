@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -53,7 +54,6 @@ async def analyze(body: AnalysisIn):
 
     # Per-IP deep data when IP is specified
     if body.ip:
-        import asyncio
         ip_results = await asyncio.gather(
             allegro_get(f"/API/stats/modules/ip/ips/{body.ip}"),
             allegro_get(f"/API/stats/modules/ip/ips/{body.ip}/tcpStats"),

@@ -79,16 +79,19 @@ async def chat(body: ChatIn):
             yield f"data: ⚠️ Error: {e}\n\n"
         finally:
             # Save AI response regardless of success/failure
-            if ai_response:
-                full_reply = "".join(ai_response)
-                all_msgs = get_chat_history(body.session_id)
-                add_chat_message({
-                    "id": next_id(all_msgs),
-                    "session_id": body.session_id,
-                    "role": "assistant",
-                    "content": full_reply,
-                    "ts": time.time(),
-                })
+            try:
+                if ai_response:
+                    full_reply = "".join(ai_response)
+                    all_msgs = get_chat_history(body.session_id)
+                    add_chat_message({
+                        "id": next_id(all_msgs),
+                        "session_id": body.session_id,
+                        "role": "assistant",
+                        "content": full_reply,
+                        "ts": time.time(),
+                    })
+            except Exception:
+                pass  # never crash the stream due to save failure
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

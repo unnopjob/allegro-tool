@@ -182,15 +182,6 @@
     return bytes + ' B';
   }
 
-  function formatBps(bps) {
-    if (bps == null || isNaN(bps)) return '—';
-    bps = Number(bps);
-    if (bps >= 1e9) return (bps / 1e9).toFixed(1) + ' Gbps';
-    if (bps >= 1e6) return (bps / 1e6).toFixed(1) + ' Mbps';
-    if (bps >= 1e3) return (bps / 1e3).toFixed(1) + ' Kbps';
-    return bps + ' bps';
-  }
-
   function formatNumber(n) {
     if (n == null) return '—';
     return Number(n).toLocaleString();
@@ -528,8 +519,8 @@
 
           return '<tr class="hover:bg-gray-700/30 transition-colors">' +
             '<td class="px-3 py-1.5"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300 font-mono">' + escHtml(proto) + '</span></td>' +
-            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(clientIp) + (clientPort ? ':<span class="text-gray-500">' + clientPort + '</span>' : '') + '</td>' +
-            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(serverIp) + (serverPort ? ':<span class="text-blue-400">' + serverPort + '</span>' : '') + '</td>' +
+            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(clientIp) + (clientPort ? ':<span class="text-gray-500">' + escHtml(String(clientPort)) + '</span>' : '') + '</td>' +
+            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(serverIp) + (serverPort ? ':<span class="text-blue-400">' + escHtml(String(serverPort)) + '</span>' : '') + '</td>' +
             '<td class="px-3 py-1.5 text-gray-300">' + bytes + '</td>' +
             '<td class="px-3 py-1.5 text-gray-400">' + resp + '</td>' +
             '<td class="px-3 py-1.5"><span class="' + stateClass + ' font-medium">' + escHtml(state || '—') + '</span></td>' +
