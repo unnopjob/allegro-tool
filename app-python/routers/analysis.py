@@ -20,6 +20,7 @@ ANALYSIS_TYPES = {
 class AnalysisIn(BaseModel):
     type: str = "overview"
     question: Optional[str] = None
+    ip: Optional[str] = None
 
 
 @router.post("")
@@ -50,19 +51,35 @@ async def analyze(body: AnalysisIn):
     except Exception:
         pass
 
+    # Per-IP deep data when IP is specified
+    if body.ip:
+        import asyncio
+        ip_results = await asyncio.gather(
+            allegro_get(f"/API/stats/modules/ip/ips/{body.ip}"),
+            allegro_get(f"/API/stats/modules/ip/ips/{body.ip}/tcpStats"),
+            allegro_get(f"/API/stats/modules/ip/ips/{body.ip}/peers", {"sort": "bytes", "count": 10}),
+            allegro_get(f"/API/stats/modules/ip/ips/{body.ip}/connections", {"sort": "bytes", "count": 20}),
+            return_exceptions=True,
+        )
+        labels = ["IP Stats", "TCP Stats", "Top Peers", "Connections"]
+        for label, result in zip(labels, ip_results):
+            if not isinstance(result, Exception):
+                data_parts.append(f"{label} ของ {body.ip}:\n{str(result)[:2000]}")
+
     # Knowledge base
     kb = " ".join(f["content"] for f in get_knowledge_files())
     if kb:
         data_parts.append(f"Knowledge base:\n{kb[:4000]}")
 
     task = ANALYSIS_TYPES.get(body.type, ANALYSIS_TYPES["overview"])
+    ip_context = f"\n\nIP ที่ต้องการวิเคราะห์: {body.ip}" if body.ip else ""
     question = f"\n\nคำถามเพิ่มเติม: {body.question}" if body.question else ""
 
     prompt = f"""ข้อมูลเครือข่ายจาก Allegro Network Multimeter:
 
 {chr(10).join(data_parts)}
 
-งาน: {task}{question}
+งาน: {task}{ip_context}{question}
 
 กรุณาวิเคราะห์และตอบเป็นภาษาไทย ใช้ bullet points และให้คำแนะนำที่เป็นรูปธรรม"""
 

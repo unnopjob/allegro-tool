@@ -38,6 +38,14 @@
       </div>
     </div>
 
+    <!-- Optional IP -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
+      <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Target IP <span class="text-gray-500 font-normal normal-case">(optional — for deep IP analysis)</span></h2>
+      <input id="analysis-ip" type="text" placeholder="e.g. 192.168.1.5"
+        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono" />
+      <p class="text-xs text-gray-500 mt-1.5">If provided, Allegro will pull TCP stats, peers and connections for this IP.</p>
+    </div>
+
     <!-- Optional Question -->
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Custom Question <span class="text-gray-500 font-normal normal-case">(optional)</span></h2>
@@ -151,6 +159,26 @@
 <script>
   var selectedType = 'overview';
 
+  // Auto-fill IP from URL query param ?ip=xxx and select TCP type
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var ipParam = params.get('ip');
+    if (ipParam) {
+      var ipInput = document.getElementById('analysis-ip');
+      if (ipInput) ipInput.value = ipParam;
+      // Auto-select TCP Flow type
+      document.querySelectorAll('.analysis-type-btn').forEach(function (b) {
+        b.classList.remove('border-blue-500', 'bg-blue-600/20', 'text-blue-300');
+        b.classList.add('border-gray-600', 'text-gray-300');
+        if (b.dataset.type === 'tcp') {
+          b.classList.add('border-blue-500', 'bg-blue-600/20', 'text-blue-300');
+          b.classList.remove('border-gray-600', 'text-gray-300');
+          selectedType = 'tcp';
+        }
+      });
+    }
+  })();
+
   // Type button selection
   document.querySelectorAll('.analysis-type-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -254,6 +282,7 @@
     var spinner = document.getElementById('analyze-spinner');
     var resultEl = document.getElementById('analysis-result');
     var question = document.getElementById('analysis-question').value.trim();
+    var targetIp = document.getElementById('analysis-ip').value.trim();
 
     btn.disabled = true;
     spinner.classList.remove('hidden');
@@ -262,11 +291,15 @@
     _rawResult = '';
     document.getElementById('copy-result-btn').classList.add('hidden');
 
+    var reqBody = { type: selectedType };
+    if (question) reqBody.question = question;
+    if (targetIp) reqBody.ip = targetIp;
+
     try {
       const res = await fetch('/api/analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: selectedType, question: question || undefined })
+        body: JSON.stringify(reqBody)
       });
 
       if (!res.ok) {

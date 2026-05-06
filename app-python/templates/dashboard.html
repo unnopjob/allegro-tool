@@ -62,7 +62,6 @@
 <div class="mb-6">
   <h2 class="text-lg font-semibold text-gray-200 mb-3" data-i18n="dash.interfaces">Interfaces</h2>
   <div id="interface-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-    <!-- Skeleton placeholders -->
     <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
     <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
     <div class="skeleton-card bg-gray-800 rounded-xl p-4 border border-gray-700 animate-pulse h-32"></div>
@@ -74,7 +73,7 @@
 <div class="bg-gray-800 rounded-xl border border-gray-700">
   <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
     <h2 class="text-lg font-semibold text-gray-200" data-i18n="dash.top_ips">Top IPs by Traffic</h2>
-    <span class="text-xs text-gray-500">Top 10 · sorted by bytes</span>
+    <span class="text-xs text-gray-500">Top 10 · sorted by bytes · click any IP for details</span>
   </div>
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
@@ -85,19 +84,93 @@
           <th class="px-5 py-3">Bytes</th>
           <th class="px-5 py-3">Packets</th>
           <th class="px-5 py-3">Flows</th>
+          <th class="px-5 py-3"></th>
         </tr>
       </thead>
       <tbody id="top-ips-body" class="divide-y divide-gray-700">
-        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500" data-i18n="dash.loading">Loading…</td></tr>
+        <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500" data-i18n="dash.loading">Loading…</td></tr>
       </tbody>
     </table>
   </div>
 </div>
+
+<!-- ═══════════ IP DETAIL DRAWER ═══════════ -->
+<div id="ip-drawer-backdrop" class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm" onclick="closeIPDetail()"></div>
+
+<div id="ip-drawer" class="fixed top-0 right-0 h-full w-full max-w-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out bg-gray-900 border-l border-gray-700 shadow-2xl flex flex-col">
+
+  <!-- Drawer Header -->
+  <div class="flex-shrink-0 bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+        <h2 id="drawer-ip-title" class="text-lg font-bold text-white font-mono">—</h2>
+      </div>
+      <p class="text-xs text-gray-400 mt-0.5">IP Detail — Live data from Allegro</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="goAnalyzeIP()"
+        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Analyze
+      </button>
+      <button onclick="closeIPDetail()"
+        class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Drawer Content (scrollable) -->
+  <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+    <!-- Traffic Summary -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">📊 Traffic Summary</h3>
+      <div id="drawer-summary" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-gray-800 rounded-lg p-3 animate-pulse h-16"></div>
+        <div class="bg-gray-800 rounded-lg p-3 animate-pulse h-16"></div>
+        <div class="bg-gray-800 rounded-lg p-3 animate-pulse h-16"></div>
+        <div class="bg-gray-800 rounded-lg p-3 animate-pulse h-16"></div>
+      </div>
+    </div>
+
+    <!-- TCP Stats -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">🔗 TCP Stats</h3>
+      <div id="drawer-tcp" class="bg-gray-800 rounded-lg p-4 animate-pulse h-24"></div>
+    </div>
+
+    <!-- Top Peers -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">👥 Top Peers</h3>
+      <div id="drawer-peers" class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div class="animate-pulse h-32"></div>
+      </div>
+    </div>
+
+    <!-- Connections -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">🔌 Recent Connections <span class="text-gray-600 normal-case font-normal">(top 20 by bytes)</span></h3>
+      <div id="drawer-connections" class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div class="animate-pulse h-48"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ═══════════════════════════════════════ -->
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
   let refreshTimer = null;
+  let currentDrawerIP = null;
 
   function formatBytes(bytes) {
     if (bytes == null || isNaN(bytes)) return '—';
@@ -109,9 +182,27 @@
     return bytes + ' B';
   }
 
+  function formatBps(bps) {
+    if (bps == null || isNaN(bps)) return '—';
+    bps = Number(bps);
+    if (bps >= 1e9) return (bps / 1e9).toFixed(1) + ' Gbps';
+    if (bps >= 1e6) return (bps / 1e6).toFixed(1) + ' Mbps';
+    if (bps >= 1e3) return (bps / 1e3).toFixed(1) + ' Kbps';
+    return bps + ' bps';
+  }
+
   function formatNumber(n) {
     if (n == null) return '—';
     return Number(n).toLocaleString();
+  }
+
+  function formatMs(ms) {
+    if (ms == null || isNaN(ms)) return '—';
+    return Number(ms).toFixed(1) + ' ms';
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function setError(msg) {
@@ -136,7 +227,6 @@
     const val = document.getElementById('health-score-val');
     const lbl = document.getElementById('health-label');
     val.textContent = score;
-    // dasharray = (score / 100) * circumference(r=15.9) ≈ 100 units scaled
     const pct = (score / 100) * 100;
     arc.setAttribute('stroke-dasharray', pct + ' 100');
     if (score >= 80) { arc.setAttribute('stroke', '#22c55e'); lbl.textContent = t('dash.health_good'); lbl.className = 'text-sm font-medium text-green-400'; }
@@ -146,7 +236,6 @@
 
   function renderInterfaces(interfaces) {
     const grid = document.getElementById('interface-grid');
-    // Remove skeleton cards
     grid.querySelectorAll('.skeleton-card').forEach(function (el) { el.remove(); });
 
     if (!interfaces || interfaces.length === 0) {
@@ -155,7 +244,6 @@
     }
 
     let up = 0, down = 0;
-
     interfaces.forEach(function (iface) {
       var name = iface.name || iface.ifName || iface.index || 'Interface';
       var statusRaw = (iface.operStatus || iface.status || '').toString().toUpperCase();
@@ -180,14 +268,9 @@
           '<div class="flex justify-between"><span>' + t('dash.tx') + '</span><span class="text-gray-200">' + txBytes + '</span></div>' +
         '</div>';
 
-      // Find or append
       var existing = grid.querySelector('[data-iface="' + name + '"]');
-      if (existing) {
-        existing.replaceWith(card);
-      } else {
-        card.setAttribute('data-iface', name);
-        grid.appendChild(card);
-      }
+      if (existing) { existing.replaceWith(card); }
+      else { grid.appendChild(card); }
       card.setAttribute('data-iface', name);
     });
 
@@ -200,7 +283,7 @@
     var tbody = document.getElementById('top-ips-body');
     var items = data.data || data.items || data.ips || data || [];
     if (!Array.isArray(items) || items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">No IP data available.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">No IP data available.</td></tr>';
       return;
     }
     tbody.innerHTML = items.slice(0, 10).map(function (ip, i) {
@@ -208,19 +291,256 @@
       var bytes = formatBytes(ip.bytes || ip.totalBytes);
       var pkts = formatNumber(ip.packets || ip.totalPackets);
       var flows = formatNumber(ip.flows || ip.totalFlows);
-      return '<tr class="hover:bg-gray-700/40 transition-colors">' +
+      return '<tr class="hover:bg-gray-700/40 transition-colors cursor-pointer group" onclick="openIPDetail(\'' + escHtml(addr) + '\')">' +
         '<td class="px-5 py-3 text-gray-500">' + (i + 1) + '</td>' +
-        '<td class="px-5 py-3 font-mono text-blue-300">' + escHtml(addr) + '</td>' +
+        '<td class="px-5 py-3 font-mono text-blue-300 group-hover:text-blue-200">' + escHtml(addr) + '</td>' +
         '<td class="px-5 py-3 text-gray-200">' + bytes + '</td>' +
         '<td class="px-5 py-3 text-gray-200">' + pkts + '</td>' +
         '<td class="px-5 py-3 text-gray-200">' + flows + '</td>' +
+        '<td class="px-5 py-3 text-right">' +
+          '<span class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-400 flex items-center gap-1 justify-end">' +
+            '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+            'Details' +
+          '</span>' +
+        '</td>' +
         '</tr>';
     }).join('');
   }
 
-  function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // ═══════════ IP DETAIL DRAWER ═══════════
+
+  function openIPDetail(ip) {
+    currentDrawerIP = ip;
+    document.getElementById('drawer-ip-title').textContent = ip;
+
+    // Reset sections to loading state
+    document.getElementById('drawer-summary').innerHTML =
+      '<div class="bg-gray-800 rounded-lg p-3 animate-pulse h-16"></div>'.repeat(4);
+    document.getElementById('drawer-tcp').className = 'bg-gray-800 rounded-lg p-4 animate-pulse h-24';
+    document.getElementById('drawer-tcp').innerHTML = '';
+    document.getElementById('drawer-peers').innerHTML = '<div class="animate-pulse h-32 bg-gray-800 rounded-xl"></div>';
+    document.getElementById('drawer-connections').innerHTML = '<div class="animate-pulse h-48 bg-gray-800 rounded-xl"></div>';
+
+    // Show drawer
+    document.getElementById('ip-drawer-backdrop').classList.remove('hidden');
+    requestAnimationFrame(function () {
+      document.getElementById('ip-drawer').classList.remove('translate-x-full');
+    });
+
+    // Fetch all 4 endpoints in parallel
+    var enc = encodeURIComponent(ip);
+    Promise.allSettled([
+      fetch('/api/allegro/API/stats/modules/ip/ips/' + enc).then(function(r){ return r.ok ? r.json() : null; }),
+      fetch('/api/allegro/API/stats/modules/ip/ips/' + enc + '/tcpStats').then(function(r){ return r.ok ? r.json() : null; }),
+      fetch('/api/allegro/API/stats/modules/ip/ips/' + enc + '/peers?sort=bytes&count=10').then(function(r){ return r.ok ? r.json() : null; }),
+      fetch('/api/allegro/API/stats/modules/ip/ips/' + enc + '/connections?sort=bytes&count=20').then(function(r){ return r.ok ? r.json() : null; })
+    ]).then(function(results) {
+      if (currentDrawerIP !== ip) return; // closed or changed
+      var ipData      = results[0].status === 'fulfilled' ? results[0].value : null;
+      var tcpData     = results[1].status === 'fulfilled' ? results[1].value : null;
+      var peersData   = results[2].status === 'fulfilled' ? results[2].value : null;
+      var connsData   = results[3].status === 'fulfilled' ? results[3].value : null;
+
+      renderDrawerSummary(ipData);
+      renderDrawerTCP(tcpData);
+      renderDrawerPeers(peersData);
+      renderDrawerConnections(connsData);
+    });
   }
+
+  function closeIPDetail() {
+    currentDrawerIP = null;
+    document.getElementById('ip-drawer').classList.add('translate-x-full');
+    setTimeout(function() {
+      document.getElementById('ip-drawer-backdrop').classList.add('hidden');
+    }, 300);
+  }
+
+  function goAnalyzeIP() {
+    if (currentDrawerIP) {
+      window.location.href = '/analysis?ip=' + encodeURIComponent(currentDrawerIP);
+    }
+  }
+
+  // ESC key to close drawer
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeIPDetail();
+  });
+
+  function renderDrawerSummary(d) {
+    var el = document.getElementById('drawer-summary');
+    if (!d) {
+      el.innerHTML = '<p class="col-span-4 text-center text-gray-500 text-sm py-4">No data available</p>';
+      return;
+    }
+
+    // Try common field patterns from Allegro
+    var bytes   = d.bytes   || d.totalBytes   || (d.interval && d.interval[1]) || null;
+    var rxBytes = d.rxBytes || d.inBytes      || (d.interval && d.interval[1]) || null;
+    var txBytes = d.txBytes || d.outBytes     || (d.interval && d.interval[3]) || null;
+    var packets = d.packets || d.totalPackets || (d.interval && d.interval[0]) || null;
+    var flows   = d.flows   || d.totalFlows   || d.connections || null;
+    var bps     = d.bps     || d.intervalPerSecond || null;
+    if (Array.isArray(bps)) bps = bps[0]; // bps[0] = rx pps, might need index 1
+
+    var cards = [
+      { label: 'Total Bytes', value: formatBytes(bytes), color: 'text-white' },
+      { label: 'RX / TX',     value: formatBytes(rxBytes) + ' / ' + formatBytes(txBytes), color: 'text-blue-300' },
+      { label: 'Packets',     value: formatNumber(packets), color: 'text-white' },
+      { label: 'Flows',       value: formatNumber(flows), color: 'text-white' },
+    ];
+
+    el.innerHTML = cards.map(function(c) {
+      return '<div class="bg-gray-800 rounded-lg p-3 border border-gray-700">' +
+        '<p class="text-xs text-gray-500 mb-1">' + c.label + '</p>' +
+        '<p class="text-sm font-semibold ' + c.color + '">' + c.value + '</p>' +
+        '</div>';
+    }).join('');
+    el.className = 'grid grid-cols-2 sm:grid-cols-4 gap-3';
+  }
+
+  function renderDrawerTCP(d) {
+    var el = document.getElementById('drawer-tcp');
+    el.className = 'bg-gray-800 rounded-xl border border-gray-700 p-4';
+    if (!d) {
+      el.innerHTML = '<p class="text-center text-gray-500 text-sm">No TCP data available</p>';
+      return;
+    }
+
+    // Allegro tcpStats field names (various firmware versions)
+    var hsClient    = d.tcpHandshakeTimeAvg || d.clientHandshakeTimeAvg || d.handshakeTimeAvgClient || null;
+    var hsServer    = d.serverHandshakeTimeAvg || d.handshakeTimeAvgServer || null;
+    var hsMax       = d.tcpHandshakeTimeMax || d.handshakeTimeMax || null;
+    var retransPct  = d.tcpRetransmittedBytesPercent || d.retransmittedPercent || d.retransmitPercent || null;
+    var retransBytes= d.tcpRetransmittedBytes || d.retransmittedBytes || null;
+    var respAvg     = d.tcpResponseTimeAvg || d.responseTimeAvg || d.dataResponseTimeAvg || null;
+    var respMax     = d.tcpResponseTimeMax || d.responseTimeMax || d.dataResponseTimeMax || null;
+    var synCount    = d.tcpSynCount || d.synCount || null;
+    var rstCount    = d.tcpRstCount || d.rstCount || null;
+
+    // Color coding for retransmit
+    var retransColor = 'text-green-400';
+    if (retransPct != null) {
+      if (retransPct > 3) retransColor = 'text-red-400';
+      else if (retransPct > 1) retransColor = 'text-yellow-400';
+    }
+
+    el.innerHTML =
+      '<div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">' +
+        _tcpRow('Handshake avg (client)', formatMs(hsClient)) +
+        _tcpRow('Handshake avg (server)', formatMs(hsServer)) +
+        _tcpRow('Handshake max', formatMs(hsMax)) +
+        _tcpRow('Response avg', formatMs(respAvg)) +
+        _tcpRow('Response max', formatMs(respMax)) +
+        _tcpRow('Retransmit', retransPct != null
+          ? '<span class="' + retransColor + ' font-semibold">' + Number(retransPct).toFixed(2) + '%</span>'
+            + (retransBytes ? ' <span class="text-gray-500">(' + formatBytes(retransBytes) + ')</span>' : '')
+          : '<span class="text-gray-500">—</span>', true) +
+        (synCount != null ? _tcpRow('SYN count', formatNumber(synCount)) : '') +
+        (rstCount != null ? _tcpRow('RST count', '<span class="' + (rstCount > 0 ? 'text-yellow-400' : 'text-gray-200') + '">' + formatNumber(rstCount) + '</span>', true) : '') +
+      '</div>';
+  }
+
+  function _tcpRow(label, value, raw) {
+    return '<div>' +
+      '<p class="text-xs text-gray-500">' + label + '</p>' +
+      '<p class="text-gray-200 font-medium mt-0.5">' + (raw ? value : escHtml(String(value))) + '</p>' +
+      '</div>';
+  }
+
+  function renderDrawerPeers(d) {
+    var el = document.getElementById('drawer-peers');
+    var items = (d && (d.data || d.peers || d)) || [];
+    if (!Array.isArray(items)) items = [];
+
+    if (items.length === 0) {
+      el.innerHTML = '<p class="text-center text-gray-500 text-sm py-6">No peer data available</p>';
+      el.className = 'bg-gray-800 rounded-xl border border-gray-700 p-4';
+      return;
+    }
+
+    el.className = 'bg-gray-800 rounded-xl border border-gray-700 overflow-hidden';
+    el.innerHTML =
+      '<table class="w-full text-sm">' +
+        '<thead><tr class="text-left text-xs text-gray-400 uppercase tracking-wider border-b border-gray-700">' +
+          '<th class="px-4 py-2">Peer IP</th>' +
+          '<th class="px-4 py-2">Bytes</th>' +
+          '<th class="px-4 py-2">RX</th>' +
+          '<th class="px-4 py-2">TX</th>' +
+          '<th class="px-4 py-2">Packets</th>' +
+        '</tr></thead>' +
+        '<tbody class="divide-y divide-gray-700/50">' +
+        items.slice(0, 10).map(function(p) {
+          var peerIp  = p.ip || p.peerIp || p.address || '—';
+          var bytes   = formatBytes(p.bytes || p.totalBytes);
+          var rx      = formatBytes(p.rxBytes || p.inBytes);
+          var tx      = formatBytes(p.txBytes || p.outBytes);
+          var pkts    = formatNumber(p.packets || p.totalPackets);
+          return '<tr class="hover:bg-gray-700/30 transition-colors">' +
+            '<td class="px-4 py-2 font-mono text-blue-300">' + escHtml(peerIp) + '</td>' +
+            '<td class="px-4 py-2 text-gray-200">' + bytes + '</td>' +
+            '<td class="px-4 py-2 text-gray-300">' + rx + '</td>' +
+            '<td class="px-4 py-2 text-gray-300">' + tx + '</td>' +
+            '<td class="px-4 py-2 text-gray-400">' + pkts + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody>' +
+      '</table>';
+  }
+
+  function renderDrawerConnections(d) {
+    var el = document.getElementById('drawer-connections');
+    var items = (d && (d.data || d.connections || d)) || [];
+    if (!Array.isArray(items)) items = [];
+
+    if (items.length === 0) {
+      el.innerHTML = '<p class="text-center text-gray-500 text-sm py-6">No connection data available</p>';
+      el.className = 'bg-gray-800 rounded-xl border border-gray-700 p-4';
+      return;
+    }
+
+    var tcpEndColor = {fin:'text-green-400', rst:'text-red-400', timeout:'text-yellow-400', open:'text-blue-400'};
+
+    el.className = 'bg-gray-800 rounded-xl border border-gray-700 overflow-hidden';
+    el.innerHTML =
+      '<div class="overflow-x-auto">' +
+      '<table class="w-full text-xs">' +
+        '<thead><tr class="text-left text-xs text-gray-400 uppercase tracking-wider border-b border-gray-700">' +
+          '<th class="px-3 py-2">Protocol</th>' +
+          '<th class="px-3 py-2">Client</th>' +
+          '<th class="px-3 py-2">Server</th>' +
+          '<th class="px-3 py-2">Bytes</th>' +
+          '<th class="px-3 py-2">Resp</th>' +
+          '<th class="px-3 py-2">State</th>' +
+        '</tr></thead>' +
+        '<tbody class="divide-y divide-gray-700/50">' +
+        items.slice(0, 20).map(function(c) {
+          var proto     = (c.l7protocol || c.protocol || c.l4protocol || '—').toUpperCase();
+          var clientIp  = c.clientIp  || c.srcIp  || '—';
+          var clientPort= c.clientPort || c.srcPort || '';
+          var serverIp  = c.serverIp  || c.dstIp  || '—';
+          var serverPort= c.serverPort || c.dstPort || '';
+          var bytes     = formatBytes(c.bytes || c.totalBytes);
+          var resp      = c.responseTime != null ? formatMs(c.responseTime)
+                        : c.tcpResponseTimeAvg != null ? formatMs(c.tcpResponseTimeAvg) : '—';
+          var state     = (c.tcpEnd || c.state || '').toLowerCase();
+          var stateClass= tcpEndColor[state] || 'text-gray-400';
+
+          return '<tr class="hover:bg-gray-700/30 transition-colors">' +
+            '<td class="px-3 py-1.5"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300 font-mono">' + escHtml(proto) + '</span></td>' +
+            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(clientIp) + (clientPort ? ':<span class="text-gray-500">' + clientPort + '</span>' : '') + '</td>' +
+            '<td class="px-3 py-1.5 font-mono text-gray-300">' + escHtml(serverIp) + (serverPort ? ':<span class="text-blue-400">' + serverPort + '</span>' : '') + '</td>' +
+            '<td class="px-3 py-1.5 text-gray-300">' + bytes + '</td>' +
+            '<td class="px-3 py-1.5 text-gray-400">' + resp + '</td>' +
+            '<td class="px-3 py-1.5"><span class="' + stateClass + ' font-medium">' + escHtml(state || '—') + '</span></td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody>' +
+      '</table>' +
+      '</div>';
+  }
+
+  // ═══════════ Main Dashboard ═══════════
 
   async function fetchAll() {
     setError(null);
@@ -230,7 +550,6 @@
         fetch('/api/allegro/API/stats/modules/ip/ips_paged?page=0&pageSize=10&sortBy=bytes&sortOrder=desc')
       ]);
 
-      // Interfaces
       if (ifaceRes.status === 'fulfilled' && ifaceRes.value.ok) {
         var ifaceData = await ifaceRes.value.json();
         var interfaces = ifaceData.interfaces || ifaceData.data || ifaceData || [];
@@ -238,14 +557,11 @@
         renderInterfaces(interfaces);
         renderHealth(calcHealthScore(interfaces));
       } else {
-        // Detect "no active device" (503) vs real error
         var errMsg = t('dash.no_device');
         if (ifaceRes.status === 'fulfilled') {
           try {
             var errData = await ifaceRes.value.json();
-            if (ifaceRes.value.status !== 503) {
-              errMsg = errData.error || errData.detail || t('dash.load_error');
-            }
+            if (ifaceRes.value.status !== 503) errMsg = errData.error || errData.detail || t('dash.load_error');
           } catch (e) {}
         }
         setError(errMsg);
@@ -261,13 +577,12 @@
           '</div>';
       }
 
-      // Top IPs
       if (ipRes.status === 'fulfilled' && ipRes.value.ok) {
         var ipData = await ipRes.value.json();
         renderTopIPs(ipData);
       } else {
         document.getElementById('top-ips-body').innerHTML =
-          '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">' + t('dash.no_device') + '</td></tr>';
+          '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">' + t('dash.no_device') + '</td></tr>';
       }
     } catch (err) {
       setError('Network error: ' + err.message);
