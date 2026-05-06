@@ -54,9 +54,9 @@ python3 app.py
 ไปที่ **Settings** → ใส่ API Key → กด **Save & Test**
 
 - รับฟรีที่ [Google AI Studio](https://aistudio.google.com) (ไม่ต้องใส่บัตรเครดิต)
-- หรือตั้งไว้ใน `.env.local`: `GEMINI_API_KEY=AQ.Ab...`
+- หรือตั้งไว้ใน `.env.local`: `GEMINI_API_KEY=AIzaSy...`
 
-> หมายเหตุ: Google เปลี่ยน format API key จาก `AIzaSy...` เป็น `AQ.Ab...` แล้ว ระบบรองรับทั้ง 2 แบบ
+> ระบบรองรับ API Key ทุก format (`AIzaSy...`, `AQ.Ab...` ฯลฯ)
 
 ### 2. เพิ่ม Allegro Device
 ไปที่ **Devices** → Add Device → ใส่ IP, Username, Password → กด **Activate**
@@ -167,7 +167,7 @@ allegro-tool/
 ### v1.2 (2025-03)
 - ✨ Upgrade Gemini SDK: `google-generativeai` → `google-genai` v1.10+
 - ✨ เปลี่ยน model เป็น `gemini-2.5-flash`
-- 🐛 รองรับ Google API Key format ใหม่ `AQ.Ab...` (เดิม `AIzaSy...`)
+- 🐛 รองรับ Google API Key ทุก format (`AIzaSy...`, `AQ.Ab...`)
 - 🐛 แก้ Delete Device ไม่ทำงาน, Edit Device 405 error
 - 🐛 ช่อง IP ไม่ต้องพิมพ์ `https://` แล้ว
 
