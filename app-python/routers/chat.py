@@ -43,25 +43,20 @@ async def chat(body: ChatIn):
     # ── Load previous turns (max 20 messages = 10 back-and-forth) ────────────
     prev = get_chat_history(body.session_id)[-20:]
 
-    # ── Build Gemini multi-turn contents ─────────────────────────────────────
-    # Gemini requires alternating user/model turns starting with user.
-    # We inject network context into the first user message if available.
-    turns = []
+    # ── Build prev_turns for Gemini Chat history ──────────────────────────────
+    # Gemini requires strictly alternating user/model turns.
+    # We inject network context as an opening user/model exchange if available.
+    prev_turns = []
 
-    # First turn: context primer (if any context) — gets one model ACK
     if context_parts:
-        turns.append({"role": "user",  "text": "ข้อมูลบริบทเพิ่มเติม:\n" + "\n\n".join(context_parts)})
-        turns.append({"role": "model", "text": "รับทราบข้อมูลบริบทแล้วครับ พร้อมช่วยเหลือ"})
+        prev_turns.append({"role": "user",  "text": "ข้อมูลบริบทเพิ่มเติม:\n" + "\n\n".join(context_parts)})
+        prev_turns.append({"role": "model", "text": "รับทราบข้อมูลบริบทแล้วครับ พร้อมช่วยเหลือ"})
 
-    # Previous conversation turns
     for msg in prev:
         role = "user" if msg["role"] == "user" else "model"
-        turns.append({"role": role, "text": msg["content"]})
+        prev_turns.append({"role": role, "text": msg["content"]})
 
-    # Current user message
-    turns.append({"role": "user", "text": body.message})
-
-    # Save user message before streaming
+    # ── Save user message to DB now (before streaming) ────────────────────────
     msgs = get_chat_history(body.session_id)
     add_chat_message({
         "id": next_id(msgs),
@@ -71,26 +66,29 @@ async def chat(body: ChatIn):
         "ts": time.time(),
     })
 
-    collected = []
+    ai_response = []
 
     def generate():
         try:
-            for chunk in stream_conversation(turns, system=SYSTEM):
-                collected.append(chunk)
+            for chunk in stream_conversation(prev_turns, body.message, system=SYSTEM):
+                ai_response.append(chunk)
                 yield f"data: {chunk}\n\n"
-            # Save AI response after stream completes
-            all_msgs = get_chat_history(body.session_id)
-            add_chat_message({
-                "id": next_id(all_msgs),
-                "session_id": body.session_id,
-                "role": "assistant",
-                "content": "".join(collected),
-                "ts": time.time(),
-            })
         except ValueError as e:
             yield f"data: ⚠️ {e}\n\n"
         except Exception as e:
             yield f"data: ⚠️ Error: {e}\n\n"
+        finally:
+            # Save AI response regardless of success/failure
+            if ai_response:
+                full_reply = "".join(ai_response)
+                all_msgs = get_chat_history(body.session_id)
+                add_chat_message({
+                    "id": next_id(all_msgs),
+                    "session_id": body.session_id,
+                    "role": "assistant",
+                    "content": full_reply,
+                    "ts": time.time(),
+                })
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

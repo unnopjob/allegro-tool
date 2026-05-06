@@ -45,27 +45,27 @@ def stream(prompt: str, system: str = ""):
             pass
 
 
-def stream_conversation(history: list, system: str = ""):
-    """Multi-turn conversation stream.
-    history = [{"role": "user"|"model", "text": "..."}]
-    The last item must be the current user message.
+def stream_conversation(prev_turns: list, current_message: str, system: str = ""):
+    """Multi-turn conversation using Gemini Chat API.
+    prev_turns = [{"role": "user"|"model", "text": "..."}]  ← previous turns only
+    current_message = the new user message to send now
     """
     client = _client()
     config = types.GenerateContentConfig(
         system_instruction=system or None,
     )
-    contents = [
+    # Build history from previous turns
+    history = [
         types.Content(
-            role=msg["role"],
-            parts=[types.Part(text=msg["text"])]
+            role=t["role"],
+            parts=[types.Part(text=t["text"])]
         )
-        for msg in history
+        for t in prev_turns
     ]
-    for chunk in client.models.generate_content_stream(
-        model=MODEL,
-        contents=contents,
-        config=config,
-    ):
+    # Create chat session pre-loaded with history
+    chat = client.chats.create(model=MODEL, config=config, history=history)
+    # Stream the current message
+    for chunk in chat.send_message_stream(current_message):
         try:
             if chunk.text:
                 yield chunk.text
