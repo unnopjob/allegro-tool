@@ -46,13 +46,11 @@ def stream(prompt: str, system: str = ""):
 
 
 def test_key(api_key: str) -> bool:
-    """Test if an API key is valid."""
+    """Test if an API key is valid by listing models (no quota used)."""
     try:
         client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model=MODEL,
-            contents="Say OK",
-        )
-        return bool(resp.text)
+        # Use models.list() — lightweight call, no quota consumed
+        models = list(client.models.list())
+        return len(models) > 0
     except Exception:
         return False

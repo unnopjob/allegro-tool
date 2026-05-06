@@ -64,7 +64,36 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<style>
+  /* Markdown styling inside AI chat bubbles */
+  .ai-text h1,.ai-text h2,.ai-text h3 { font-weight:700; margin:0.6em 0 0.3em; color:#f1f5f9; }
+  .ai-text h1 { font-size:1.1em; }
+  .ai-text h2 { font-size:1.05em; }
+  .ai-text h3 { font-size:1em; color:#cbd5e1; }
+  .ai-text p  { margin:0.4em 0; }
+  .ai-text ul,.ai-text ol { margin:0.4em 0 0.4em 1.2em; }
+  .ai-text li { margin:0.2em 0; }
+  .ai-text strong { color:#e2e8f0; font-weight:600; }
+  .ai-text code { background:#1e293b; border-radius:4px; padding:1px 5px; font-size:0.85em; color:#7dd3fc; }
+  .ai-text pre  { background:#1e293b; border-radius:8px; padding:10px 14px; overflow-x:auto; margin:0.5em 0; }
+  .ai-text pre code { background:none; padding:0; color:#e2e8f0; }
+  .ai-text blockquote { border-left:3px solid #475569; padding-left:10px; color:#94a3b8; margin:0.4em 0; }
+  .ai-text hr { border-color:#334155; margin:0.5em 0; }
+  .ai-text a  { color:#60a5fa; text-decoration:underline; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+  // Configure marked for safe inline rendering
+  marked.setOptions({ breaks: true, gfm: true });
+
+  function renderMarkdown(text) {
+    try {
+      return marked.parse(text || '');
+    } catch (e) {
+      return '<pre>' + escHtml(text) + '</pre>';
+    }
+  }
+
   // Session ID stored in localStorage
   var SESSION_KEY = 'allegro_chat_session_id';
   var sessionId = localStorage.getItem(SESSION_KEY);
@@ -105,7 +134,9 @@
         '<div class="flex items-start gap-3" id="' + msgId + '">' +
           '<div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">AI</div>' +
           '<div class="max-w-[80%] bg-gray-700 rounded-2xl rounded-tl-sm px-4 py-3">' +
-            '<p class="text-sm text-gray-200 whitespace-pre-wrap ai-text">' + (streaming ? '' : escHtml(text)) + '</p>' +
+            '<div class="text-sm text-gray-200 prose prose-invert prose-sm max-w-none ai-text ai-raw" data-raw="">' +
+              (streaming ? '' : renderMarkdown(text)) +
+            '</div>' +
           '</div>' +
         '</div>'
       );
@@ -166,13 +197,20 @@
             if (line.startsWith('data: ')) {
               var data = line.slice(6);
               if (data === '[DONE]') return;
+              var chunk = '';
               try {
                 var parsed = JSON.parse(data);
-                aiTextEl.textContent += parsed.text || parsed.content || parsed.delta || '';
+                chunk = parsed.text || parsed.content || parsed.delta || '';
               } catch (e) {
-                aiTextEl.textContent += data;
+                chunk = data;
               }
-              scrollToBottom();
+              if (chunk) {
+                // Accumulate raw text then re-render markdown each chunk
+                var raw = (aiTextEl.getAttribute('data-raw') || '') + chunk;
+                aiTextEl.setAttribute('data-raw', raw);
+                aiTextEl.innerHTML = renderMarkdown(raw);
+                scrollToBottom();
+              }
             }
           });
         }
