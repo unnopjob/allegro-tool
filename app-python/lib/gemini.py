@@ -28,7 +28,7 @@ def ask(prompt: str, system: str = "") -> str:
 
 
 def stream(prompt: str, system: str = ""):
-    """Generator that yields text chunks for SSE streaming."""
+    """Generator that yields text chunks for SSE streaming (single-turn)."""
     client = _client()
     config = types.GenerateContentConfig(
         system_instruction=system or None,
@@ -36,6 +36,34 @@ def stream(prompt: str, system: str = ""):
     for chunk in client.models.generate_content_stream(
         model=MODEL,
         contents=prompt,
+        config=config,
+    ):
+        try:
+            if chunk.text:
+                yield chunk.text
+        except Exception:
+            pass
+
+
+def stream_conversation(history: list, system: str = ""):
+    """Multi-turn conversation stream.
+    history = [{"role": "user"|"model", "text": "..."}]
+    The last item must be the current user message.
+    """
+    client = _client()
+    config = types.GenerateContentConfig(
+        system_instruction=system or None,
+    )
+    contents = [
+        types.Content(
+            role=msg["role"],
+            parts=[types.Part(text=msg["text"])]
+        )
+        for msg in history
+    ]
+    for chunk in client.models.generate_content_stream(
+        model=MODEL,
+        contents=contents,
         config=config,
     ):
         try:

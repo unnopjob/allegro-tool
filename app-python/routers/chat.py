@@ -3,17 +3,17 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
-from lib.db import (get_active_device, get_knowledge_files,
-                    get_chat_history, add_chat_message,
-                    prune_old_chat_history, next_id)
-from lib.gemini import stream as gemini_stream
+from lib.db import (get_knowledge_files, get_chat_history,
+                    add_chat_message, prune_old_chat_history, next_id)
+from lib.gemini import stream_conversation
 from lib.allegro import allegro_get
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 SYSTEM = """คุณคือ Network AI Assistant ผู้เชี่ยวชาญด้านเครือข่าย
 วิเคราะห์ข้อมูลจาก Allegro Network Multimeter และตอบเป็นภาษาไทย
-ให้คำแนะนำที่ชัดเจน เป็นรูปธรรม และนำไปใช้ได้จริง"""
+ให้คำแนะนำที่ชัดเจน เป็นรูปธรรม และนำไปใช้ได้จริง
+จำบทสนทนาก่อนหน้าและตอบต่อเนื่องได้"""
 
 
 class ChatIn(BaseModel):
@@ -26,38 +26,42 @@ class ChatIn(BaseModel):
 async def chat(body: ChatIn):
     prune_old_chat_history(30)
 
-    # Build context
+    # ── Build system context (injected as first user turn) ───────────────────
     context_parts = []
 
     if body.include_network_context:
         try:
             ifaces = await allegro_get("/API/stats/interfaces")
-            context_parts.append(f"Network interfaces: {str(ifaces)[:2000]}")
+            context_parts.append(f"ข้อมูล Network interfaces: {str(ifaces)[:2000]}")
         except Exception:
             pass
 
-    # Knowledge base
     kb_text = " ".join(f["content"] for f in get_knowledge_files())
     if kb_text:
         context_parts.append(f"Knowledge base:\n{kb_text[:6000]}")
 
-    # Chat history
-    history = get_chat_history(body.session_id)[-20:]
-    history_text = "\n".join(
-        f"{'User' if m['role'] == 'user' else 'AI'}: {m['content']}"
-        for m in history
-    )
+    # ── Load previous turns (max 20 messages = 10 back-and-forth) ────────────
+    prev = get_chat_history(body.session_id)[-20:]
 
-    prompt_parts = []
+    # ── Build Gemini multi-turn contents ─────────────────────────────────────
+    # Gemini requires alternating user/model turns starting with user.
+    # We inject network context into the first user message if available.
+    turns = []
+
+    # First turn: context primer (if any context) — gets one model ACK
     if context_parts:
-        prompt_parts.append("=== Network Context ===\n" + "\n\n".join(context_parts))
-    if history_text:
-        prompt_parts.append("=== Chat History ===\n" + history_text)
-    prompt_parts.append(f"User: {body.message}")
+        turns.append({"role": "user",  "text": "ข้อมูลบริบทเพิ่มเติม:\n" + "\n\n".join(context_parts)})
+        turns.append({"role": "model", "text": "รับทราบข้อมูลบริบทแล้วครับ พร้อมช่วยเหลือ"})
 
-    full_prompt = "\n\n".join(prompt_parts)
+    # Previous conversation turns
+    for msg in prev:
+        role = "user" if msg["role"] == "user" else "model"
+        turns.append({"role": role, "text": msg["content"]})
 
-    # Save user message
+    # Current user message
+    turns.append({"role": "user", "text": body.message})
+
+    # Save user message before streaming
     msgs = get_chat_history(body.session_id)
     add_chat_message({
         "id": next_id(msgs),
@@ -71,10 +75,10 @@ async def chat(body: ChatIn):
 
     def generate():
         try:
-            for chunk in gemini_stream(full_prompt, system=SYSTEM):
+            for chunk in stream_conversation(turns, system=SYSTEM):
                 collected.append(chunk)
                 yield f"data: {chunk}\n\n"
-            # Save AI response
+            # Save AI response after stream completes
             all_msgs = get_chat_history(body.session_id)
             add_chat_message({
                 "id": next_id(all_msgs),
@@ -84,7 +88,6 @@ async def chat(body: ChatIn):
                 "ts": time.time(),
             })
         except ValueError as e:
-            # e.g. "Gemini API key not configured"
             yield f"data: ⚠️ {e}\n\n"
         except Exception as e:
             yield f"data: ⚠️ Error: {e}\n\n"
